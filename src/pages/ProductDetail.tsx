@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Product } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -9,33 +9,29 @@ import { ArrowLeft, AlertCircle, ShoppingCart } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useCart } from "@/context/CartContext";
+import { useProducts } from "@/context/ProductContext";
 import { toast } from "sonner";
-import { productsData } from "@/data/products";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
+  const { getProductById } = useProducts();
+  const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
   useEffect(() => {
     setLoading(true);
-    const foundProduct = productsData.find(p => p.id === id);
-    
-    setTimeout(() => {
-      if (foundProduct) {
+    if (id) {
+      const foundProduct = getProductById(id);
+      setTimeout(() => {
         setProduct(foundProduct);
-      } else {
-        // Si le produit n'est pas trouvé, on peut le laisser null
-        // et l'interface affichera un message d'erreur.
-        setProduct(null);
-      }
+        setLoading(false);
+      }, 300);
+    } else {
       setLoading(false);
-    }, 300); // Simuler un chargement
-
-  }, [id, navigate]);
+    }
+  }, [id, getProductById]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -66,7 +62,7 @@ const ProductDetail = () => {
     }).format(price);
   };
 
-  if (loading) {
+  if (loading || product === undefined) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="grid md:grid-cols-2 gap-8">

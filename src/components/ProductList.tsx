@@ -6,36 +6,36 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Terminal } from "lucide-react";
-import { productsData } from "@/data/products";
+import { useProducts } from "@/context/ProductContext";
 
 const ProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { products: allProducts } = useProducts();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const uniqueCategories = [...new Set(productsData.map(item => item.category).filter(Boolean) as string[])];
+    const uniqueCategories = [...new Set(allProducts.map(item => item.category).filter(Boolean) as string[])];
     setCategories(uniqueCategories);
-  }, []);
+  }, [allProducts]);
 
   useEffect(() => {
     setLoading(true);
     
-    const filteredProducts = productsData.filter(product => {
+    const filtered = allProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
-    // Simuler un court délai de chargement
     setTimeout(() => {
-      setProducts(filteredProducts);
+      setFilteredProducts(filtered);
       setLoading(false);
     }, 300);
 
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, allProducts]);
 
   const renderSkeletons = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -75,7 +75,7 @@ const ProductList = () => {
 
       {loading ? renderSkeletons() : (
         <>
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <Alert>
               <Terminal className="h-4 w-4" />
               <AlertTitle>Aucun Résultat</AlertTitle>
@@ -85,7 +85,7 @@ const ProductList = () => {
             </Alert>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

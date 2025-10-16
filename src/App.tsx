@@ -7,26 +7,36 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import { CartProvider } from "./context/CartContext";
+import { ProductProvider } from "./context/ProductContext";
 import Layout from "./components/Layout";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AddProduct from "./pages/admin/AddProduct";
+import EditProduct from "./pages/admin/EditProduct";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
-            <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
+      <ProductProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+              
+              <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+              <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
+              <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </ProductProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
