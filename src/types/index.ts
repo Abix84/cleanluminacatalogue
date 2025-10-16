@@ -7,3 +7,8 @@ export interface Product {
   image_url: string | null;
   category: string | null;
 }
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
