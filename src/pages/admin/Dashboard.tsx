@@ -91,6 +91,19 @@ const AdminDashboard = () => {
 
   const confirmDelete = async () => {
     if (!selectedProduct) return;
+
+    if (selectedProduct.image_url) {
+      const imagePath = selectedProduct.image_url.split('/product_images/')[1];
+      if (imagePath) {
+        const { error: storageError } = await supabase.storage
+          .from('product_images')
+          .remove([imagePath]);
+        if (storageError) {
+          showError(`Erreur lors de la suppression de l'image: ${storageError.message}`);
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("products")
       .delete()
@@ -208,7 +221,7 @@ const AdminDashboard = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedProduct(null)}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setSelectedProduct(null)}>Annuler</Cancel>
             <AlertDialogAction onClick={confirmDelete}>Supprimer</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
