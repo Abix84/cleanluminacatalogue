@@ -12,16 +12,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/context/CartContext";
 import { ShoppingCart, Trash2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 export function CartSheet() {
   const { cartItems, removeFromCart, updateQuantity, cartCount } = useCart();
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(price);
-  };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -59,7 +53,6 @@ export function CartSheet() {
                         <Input
                           type="number"
                           min="1"
-                          max={item.product.quantity}
                           value={item.quantity}
                           onChange={(e) => updateQuantity(item.product.id, parseInt(e.target.value, 10))}
                           className="w-16 h-8"

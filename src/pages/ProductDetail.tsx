@@ -11,6 +11,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/context/ProductContext";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,10 +36,6 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (product) {
-      if (quantity > product.quantity) {
-        toast.error(`Stock insuffisant. Il ne reste que ${product.quantity} unités.`);
-        return;
-      }
       addToCart(product, quantity);
     }
   };
@@ -48,18 +45,7 @@ const ProductDetail = () => {
     if (isNaN(value) || value < 1) {
       value = 1;
     }
-    if (product && value > product.quantity) {
-      value = product.quantity;
-      toast.error(`Stock maximum atteint: ${product.quantity} unités.`);
-    }
     setQuantity(value);
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(price);
   };
 
   if (loading || product === undefined) {
@@ -115,25 +101,19 @@ const ProductDetail = () => {
                     {product.description || "Aucune description disponible."}
                 </p>
                 <div className="mt-auto pt-6 space-y-4">
-                    <Badge variant={product.quantity > 0 ? "default" : "destructive"} className="text-sm">
-                        {product.quantity > 0 ? `En stock: ${product.quantity} unités` : "En rupture de stock"}
-                    </Badge>
-                    {product.quantity > 0 && (
-                        <div className="flex items-center gap-4">
-                            <Input 
-                                type="number" 
-                                value={quantity}
-                                onChange={handleQuantityChange}
-                                min="1"
-                                max={product.quantity}
-                                className="w-20"
-                            />
-                            <Button onClick={handleAddToCart} className="flex-grow">
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                Ajouter au panier
-                            </Button>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-4">
+                        <Input 
+                            type="number" 
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            min="1"
+                            className="w-20"
+                        />
+                        <Button onClick={handleAddToCart} className="flex-grow">
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Ajouter au panier
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -33,19 +33,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const existingItem = prevItems.find(item => item.product.id === product.id);
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
-        if (newQuantity > product.quantity) {
-            toast.error(`Stock insuffisant. ${product.quantity} articles restants.`);
-            return prevItems;
-        }
         toast.success(`${quantity} x ${product.name} ajouté au panier.`);
         return prevItems.map(item =>
           item.product.id === product.id ? { ...item, quantity: newQuantity } : item
         );
       } else {
-        if (quantity > product.quantity) {
-            toast.error(`Stock insuffisant. ${product.quantity} articles restants.`);
-            return prevItems;
-        }
         toast.success(`${quantity} x ${product.name} ajouté au panier.`);
         return [...prevItems, { product, quantity }];
       }
@@ -61,10 +53,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartItems(prevItems =>
       prevItems.map(item => {
         if (item.product.id === productId) {
-          if (quantity > item.product.quantity) {
-            toast.error(`Stock insuffisant. ${item.product.quantity} articles restants.`);
-            return { ...item, quantity: item.product.quantity };
-          }
           return { ...item, quantity };
         }
         return item;

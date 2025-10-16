@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const { products, deleteProduct } = useProducts();
@@ -25,13 +26,6 @@ const AdminDashboard = () => {
   const handleDelete = (productId: string) => {
     deleteProduct(productId);
     toast.success("Produit supprimé avec succès.");
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(price);
   };
 
   return (
@@ -62,7 +56,6 @@ const AdminDashboard = () => {
                 <TableHead>Nom</TableHead>
                 <TableHead>Catégorie</TableHead>
                 <TableHead className="hidden md:table-cell">Prix</TableHead>
-                <TableHead className="hidden md:table-cell">Quantité</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -85,7 +78,6 @@ const AdminDashboard = () => {
                     <Badge variant="outline">{product.category || "N/A"}</Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{formatPrice(product.price)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{product.quantity}</TableCell>
                   <TableCell>
                     <AlertDialog>
                       <DropdownMenu>

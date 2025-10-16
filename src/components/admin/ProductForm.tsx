@@ -12,9 +12,8 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   description: z.string().optional(),
   price: z.coerce.number().min(0, { message: "Le prix doit être positif." }),
-  quantity: z.coerce.number().int().min(0, { message: "La quantité doit être un entier positif." }),
   category: z.string().optional(),
-  image_url: z.string().url({ message: "Veuillez entrer une URL valide." }).optional().or(z.literal('')),
+  image_url: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -32,11 +31,12 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
       name: "",
       description: "",
       price: 0,
-      quantity: 0,
       category: "",
       image_url: "",
     },
   });
+
+  const currentImage = form.watch("image_url");
 
   return (
     <Form {...form}>
@@ -72,34 +72,19 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Prix</FormLabel>
-                    <FormControl>
-                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Quantité en stock</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="0" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                  <FormItem>
+                  <FormLabel>Prix</FormLabel>
+                  <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="category"
@@ -118,11 +103,25 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
               name="image_url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL de l'image</FormLabel>
+                  <FormLabel>Image</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.png" {...field} />
+                    <Input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            field.onChange(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
+                  {currentImage && <img src={currentImage} alt="Aperçu" className="mt-4 w-32 h-32 object-cover rounded-md border" />}
                 </FormItem>
               )}
             />

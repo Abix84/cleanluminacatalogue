@@ -1,21 +1,14 @@
 import { Product } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Link } from "react-router-dom";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(price);
-  };
-
   return (
     <Link to={`/product/${product.id}`} className="flex flex-col h-full group">
       <Card className="flex flex-col h-full transition-all duration-200 group-hover:shadow-lg group-hover:-translate-y-1">
@@ -36,9 +29,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </CardContent>
         <CardFooter className="flex justify-between items-center p-4 pt-0">
           <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
-          <Badge variant={product.quantity > 0 ? "default" : "destructive"}>
-            {product.quantity > 0 ? `En stock` : "Rupture"}
-          </Badge>
         </CardFooter>
       </Card>
     </Link>
