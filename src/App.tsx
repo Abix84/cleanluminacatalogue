@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
-import { CartProvider } from "./context/CartContext";
 import { ProductProvider } from "./context/ProductContext";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -20,22 +19,20 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ProductProvider>
-        <CartProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Layout><Index /></Layout>} />
-              <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
-              
-              <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-              <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
-              <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout><Index /></Layout>} />
+            <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+            
+            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
+            <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </CartProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </ProductProvider>
     </TooltipProvider>
   </QueryClientProvider>

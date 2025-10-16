@@ -4,13 +4,10 @@ import { Product } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, AlertCircle, ShoppingCart } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/context/ProductContext";
-import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils";
 
 const ProductDetail = () => {
@@ -18,8 +15,6 @@ const ProductDetail = () => {
   const { getProductById } = useProducts();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
 
   useEffect(() => {
     setLoading(true);
@@ -33,20 +28,6 @@ const ProductDetail = () => {
       setLoading(false);
     }
   }, [id, getProductById]);
-
-  const handleAddToCart = () => {
-    if (product) {
-      addToCart(product, quantity);
-    }
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = parseInt(e.target.value, 10);
-    if (isNaN(value) || value < 1) {
-      value = 1;
-    }
-    setQuantity(value);
-  };
 
   if (loading || product === undefined) {
     return (
@@ -100,21 +81,6 @@ const ProductDetail = () => {
                 <p className="text-muted-foreground leading-relaxed">
                     {product.description || "Aucune description disponible."}
                 </p>
-                <div className="mt-auto pt-6 space-y-4">
-                    <div className="flex items-center gap-4">
-                        <Input 
-                            type="number" 
-                            value={quantity}
-                            onChange={handleQuantityChange}
-                            min="1"
-                            className="w-20"
-                        />
-                        <Button onClick={handleAddToCart} className="flex-grow">
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Ajouter au panier
-                        </Button>
-                    </div>
-                </div>
             </div>
         </div>
         <footer className="mt-12">

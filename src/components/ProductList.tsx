@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Terminal } from "lucide-react";
 import { useProducts } from "@/context/ProductContext";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const ProductList = () => {
   const { products: allProducts } = useProducts();
@@ -15,6 +16,8 @@ const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const uniqueCategories = [...new Set(allProducts.map(item => item.category).filter(Boolean) as string[])];
@@ -36,6 +39,11 @@ const ProductList = () => {
     }, 300);
 
   }, [searchTerm, selectedCategory, allProducts]);
+
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsModalOpen(true);
+  };
 
   const renderSkeletons = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -86,12 +94,22 @@ const ProductList = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onImageClick={handleImageClick}
+                />
               ))}
             </div>
           )}
         </>
       )}
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-3xl p-0 bg-transparent border-0">
+          <img src={selectedImage || ''} alt="Aperçu du produit" className="w-full h-auto rounded-lg" />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -6,14 +6,24 @@ import { formatPrice } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
+  onImageClick: (imageUrl: string) => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
+  
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.image_url) {
+      onImageClick(product.image_url);
+    }
+  };
+
   return (
     <Link to={`/product/${product.id}`} className="flex flex-col h-full group">
       <Card className="flex flex-col h-full transition-all duration-200 group-hover:shadow-lg group-hover:-translate-y-1">
         <CardHeader className="p-4">
-          <AspectRatio ratio={4 / 3}>
+          <AspectRatio ratio={4 / 3} onClick={handleImageClick} className="cursor-pointer">
             <img
               src={product.image_url || "/placeholder.svg"}
               alt={product.name}

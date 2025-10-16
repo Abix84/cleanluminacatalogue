@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { CartSheet } from "./CartSheet";
 
 const Navbar = () => {
   return (
@@ -9,9 +8,6 @@ const Navbar = () => {
           <Link to="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold">CleanExpress</span>
           </Link>
-        </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <CartSheet />
         </div>
       </div>
     </header>
