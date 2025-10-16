@@ -151,3 +151,6 @@ const ProductDetail = () => {
         </footer>
     </div>
   );
+};
+
+export default ProductDetail;
