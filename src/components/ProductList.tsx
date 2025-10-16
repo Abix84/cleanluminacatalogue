@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,65 +6,35 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Terminal } from "lucide-react";
+import { productsData } from "@/data/products";
 
 const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("category")
-        .not("category", "is", null);
-
-      if (error) {
-        console.error("Error fetching categories:", error);
-      } else {
-        const uniqueCategories = [...new Set(data.map(item => item.category))];
-        setCategories(uniqueCategories);
-      }
-    };
-    fetchCategories();
+    const uniqueCategories = [...new Set(productsData.map(item => item.category).filter(Boolean) as string[])];
+    setCategories(uniqueCategories);
   }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      
-      let query = supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+    setLoading(true);
+    
+    const filteredProducts = productsData.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
 
-      if (searchTerm) {
-        query = query.ilike("name", `%${searchTerm}%`);
-      }
-
-      if (selectedCategory !== "all") {
-        query = query.eq("category", selectedCategory);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching products:", error);
-        setError("Impossible de charger les produits. Veuillez réessayer plus tard.");
-      } else {
-        setProducts(data as Product[]);
-      }
+    // Simuler un court délai de chargement
+    setTimeout(() => {
+      setProducts(filteredProducts);
       setLoading(false);
-    };
+    }, 300);
 
-    const debounceTimer = setTimeout(() => {
-        fetchProducts();
-    }, 300); // Attendre 300ms après la dernière frappe pour lancer la recherche
-
-    return () => clearTimeout(debounceTimer);
   }, [searchTerm, selectedCategory]);
 
   const renderSkeletons = () => (
@@ -106,14 +75,7 @@ const ProductList = () => {
 
       {loading ? renderSkeletons() : (
         <>
-          {error && (
-            <Alert variant="destructive">
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Erreur</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {!error && products.length === 0 && (
+          {products.length === 0 ? (
             <Alert>
               <Terminal className="h-4 w-4" />
               <AlertTitle>Aucun Résultat</AlertTitle>
@@ -121,8 +83,7 @@ const ProductList = () => {
                 Aucun produit ne correspond à votre recherche. Essayez d'autres mots-clés ou filtres.
               </AlertDescription>
             </Alert>
-          )}
-          {!error && products.length > 0 && (
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />

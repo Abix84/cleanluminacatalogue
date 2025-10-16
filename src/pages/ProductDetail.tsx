@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Product } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -11,36 +10,32 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { productsData } from "@/data/products";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) return;
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching product:", error);
-        setError("Produit non trouvé ou une erreur est survenue.");
+    setLoading(true);
+    const foundProduct = productsData.find(p => p.id === id);
+    
+    setTimeout(() => {
+      if (foundProduct) {
+        setProduct(foundProduct);
       } else {
-        setProduct(data as Product);
+        // Si le produit n'est pas trouvé, on peut le laisser null
+        // et l'interface affichera un message d'erreur.
+        setProduct(null);
       }
       setLoading(false);
-    };
+    }, 300); // Simuler un chargement
 
-    fetchProduct();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -87,12 +82,12 @@ const ProductDetail = () => {
     );
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
       <div className="container mx-auto py-8 px-4 text-center">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-        <h2 className="mt-4 text-2xl font-bold">Erreur</h2>
-        <p className="mt-2 text-muted-foreground">{error || "Le produit que vous cherchez n'existe pas."}</p>
+        <h2 className="mt-4 text-2xl font-bold">Produit non trouvé</h2>
+        <p className="mt-2 text-muted-foreground">Le produit que vous cherchez n'existe pas.</p>
         <Button asChild className="mt-6">
           <Link to="/">
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour au catalogue
