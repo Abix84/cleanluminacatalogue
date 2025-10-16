@@ -127,83 +127,85 @@ const AdminDashboard = () => {
   };
 
   if (!session) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-            <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
-            <p className="text-muted-foreground">Gérez votre catalogue de produits.</p>
-        </div>
-        <div className="flex items-center gap-4">
-            <Button onClick={() => { setSelectedProduct(null); setIsFormOpen(true); }}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Se déconnecter
-            </Button>
-        </div>
-      </header>
+    <>
+      <div className="container mx-auto py-8 px-4">
+        <header className="flex justify-between items-center mb-8">
+          <div>
+              <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
+              <p className="text-muted-foreground">Gérez votre catalogue de produits.</p>
+          </div>
+          <div className="flex items-center gap-4">
+              <Button onClick={() => { setSelectedProduct(null); setIsFormOpen(true); }}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un produit
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" /> Se déconnecter
+              </Button>
+          </div>
+        </header>
 
-      <main>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Prix</TableHead>
-                <TableHead>Quantité</TableHead>
-                <TableHead>Catégorie</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+        <main>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Chargement...
-                  </TableCell>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Prix</TableHead>
+                  <TableHead>Quantité</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : products.length > 0 ? (
-                products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{formatPrice(product.price)}</TableCell>
-                    <TableCell>{product.quantity}</TableCell>
-                    <TableCell>{product.category || "N/A"}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Ouvrir le menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(product)}>
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(product)} className="text-red-600">
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      Chargement...
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Aucun produit trouvé.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </main>
+                ) : products.length > 0 ? (
+                  products.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{formatPrice(product.price)}</TableCell>
+                      <TableCell>{product.quantity}</TableCell>
+                      <TableCell>{product.category || "N/A"}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Ouvrir le menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(product)}>
+                              Modifier
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(product)} className="text-red-600">
+                              Supprimer
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      Aucun produit trouvé.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </main>
+      </div>
 
       <ProductForm
         isOpen={isFormOpen}
@@ -226,7 +228,7 @@ const AdminDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 
