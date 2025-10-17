@@ -15,6 +15,9 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AddProduct from "./pages/admin/AddProduct";
 import EditProduct from "./pages/admin/EditProduct";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { AuthProvider } from "./context/AuthContext";
+import Login from "./pages/Login";
+import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -22,26 +25,33 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <TooltipProvider>
-        <UtilityCategoryProvider>
-          <BrandProvider>
-            <ProductProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Layout><Index /></Layout>} />
-                  <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
-                  
-                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                  <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
-                  <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
+        <BrowserRouter>
+          <AuthProvider>
+            <UtilityCategoryProvider>
+              <BrandProvider>
+                <ProductProvider>
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Layout><Index /></Layout>} />
+                    <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+                    <Route path="/login" element={<Login />} />
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </ProductProvider>
-          </BrandProvider>
-        </UtilityCategoryProvider>
+                    {/* Admin Protected Routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                      <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
+                      <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
+                    </Route>
+
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </ProductProvider>
+              </BrandProvider>
+            </UtilityCategoryProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

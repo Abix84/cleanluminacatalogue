@@ -1,12 +1,27 @@
-import { Link, NavLink } from "react-router-dom";
-import { Home, Package, ShoppingCart } from "lucide-react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Home, ShoppingCart, LogOut } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Erreur lors de la déconnexion.");
+    } else {
+      toast.success("Vous avez été déconnecté.");
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
@@ -48,6 +63,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 {/* On peut ajouter une recherche ici plus tard */}
             </div>
             <ThemeToggle />
+            <Button variant="outline" size="icon" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Déconnexion</span>
+            </Button>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
