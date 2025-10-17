@@ -10,6 +10,7 @@ import { useProducts } from "@/context/ProductContext";
 import { useUtilityCategories } from "@/context/UtilityCategoryContext";
 import { useBrands } from "@/context/BrandContext";
 import { formatPrice } from "@/lib/utils";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,7 @@ const ProductDetail = () => {
   const { getBrandById } = useBrands();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -35,16 +37,27 @@ const ProductDetail = () => {
   const category = product?.utilityCategoryId ? getUtilityCategoryById(product.utilityCategoryId) : null;
   const brand = product?.brandId ? getBrandById(product.brandId) : null;
 
+  const handleImageClick = () => {
+    if (product?.image_url) {
+      setIsModalOpen(true);
+    }
+  };
+
   if (loading || product === undefined) {
     return (
       <div className="container mx-auto py-8 px-4">
+        <div className="mb-6">
+          <Skeleton className="h-9 w-40" />
+        </div>
         <div className="grid md:grid-cols-2 gap-12">
           <Skeleton className="w-full h-auto aspect-square rounded-lg" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-10 w-1/2" />
-            <Skeleton className="h-20 w-full" />
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-10 w-3/4" />
+            </div>
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-12 w-1/2" />
           </div>
         </div>
       </div>
@@ -67,40 +80,56 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-            <div>
-                <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border shadow-lg">
-                    <img
-                        src={product.image_url || "/placeholder.svg"}
-                        alt={product.name}
-                        className="rounded-lg object-contain w-full h-full"
-                    />
-                </AspectRatio>
-            </div>
-            <div className="flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  {category && (
-                      <Badge
-                        style={{ backgroundColor: category.color, color: '#fff' }}
-                      >
-                        {category.name}
-                      </Badge>
-                  )}
-                  {brand && (
-                    <Badge variant="outline">{brand.name}</Badge>
-                  )}
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
-                <div className="text-4xl font-extrabold my-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                  {formatPrice(product.price)}
-                </div>
-                <p className="text-muted-foreground leading-relaxed text-base">
-                    {product.description || "Aucune description disponible."}
-                </p>
-            </div>
+    <>
+      <div className="container mx-auto py-8 px-4">
+        <div className="mb-6">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour au catalogue
+            </Link>
+          </Button>
         </div>
-    </div>
+        <div className="grid md:grid-cols-2 gap-12 items-start">
+          <div>
+            <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border shadow-lg overflow-hidden">
+              <img
+                src={product.image_url || "/placeholder.svg"}
+                alt={product.name}
+                className="rounded-lg object-contain w-full h-full transition-transform duration-300 hover:scale-105 cursor-pointer"
+                onClick={handleImageClick}
+              />
+            </AspectRatio>
+          </div>
+          <div className="flex flex-col space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                {category && (
+                  <Badge style={{ backgroundColor: category.color, color: '#fff' }}>
+                    {category.name}
+                  </Badge>
+                )}
+                {brand && (
+                  <Badge variant="outline">{brand.name}</Badge>
+                )}
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
+            </div>
+            <p className="text-muted-foreground leading-relaxed text-base">
+              {product.description || "Aucune description disponible."}
+            </p>
+            <div className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+              {formatPrice(product.price)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-3xl p-0 bg-transparent border-0">
+          <img src={product.image_url || ''} alt="Aperçu du produit" className="w-full h-auto rounded-lg" />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
