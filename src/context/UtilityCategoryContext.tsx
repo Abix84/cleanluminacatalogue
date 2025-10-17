@@ -1,48 +1,66 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UtilityCategory } from '@/types';
-import { utilityCategoriesData as initialCategories } from '@/data/utilityCategories';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface UtilityCategoryContextType {
   utilityCategories: UtilityCategory[];
-  addUtilityCategory: (category: Omit<UtilityCategory, 'id'>) => void;
-  updateUtilityCategory: (updatedCategory: UtilityCategory) => void;
-  deleteUtilityCategory: (categoryId: string) => void;
+  addUtilityCategory: (category: Omit<UtilityCategory, 'id'>) => Promise<void>;
+  updateUtilityCategory: (updatedCategory: UtilityCategory) => Promise<void>;
+  deleteUtilityCategory: (categoryId: string) => Promise<void>;
   getUtilityCategoryById: (categoryId: string) => UtilityCategory | undefined;
+  loading: boolean;
 }
 
 const UtilityCategoryContext = createContext<UtilityCategoryContextType | undefined>(undefined);
 
 export const UtilityCategoryProvider = ({ children }: { children: ReactNode }) => {
-  const [utilityCategories, setUtilityCategories] = useState<UtilityCategory[]>(() => {
-    try {
-      const localData = localStorage.getItem('utilityCategories');
-      if (localData) {
-        return JSON.parse(localData);
-      }
-    } catch (error) {
-      console.error("Could not parse utility categories from localStorage", error);
+  const [utilityCategories, setUtilityCategories] = useState<UtilityCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('utility_categories').select('*').order('name');
+    if (error) {
+      toast.error("Erreur lors de la récupération des catégories.");
+      console.error(error);
+    } else {
+      setUtilityCategories(data || []);
     }
-    return initialCategories;
-  });
+    setLoading(false);
+  };
 
   useEffect(() => {
-    localStorage.setItem('utilityCategories', JSON.stringify(utilityCategories));
-  }, [utilityCategories]);
+    fetchCategories();
+  }, []);
 
-  const addUtilityCategory = (category: Omit<UtilityCategory, 'id'>) => {
-    const newCategory = { ...category, id: uuidv4() };
-    setUtilityCategories(prev => [...prev, newCategory]);
+  const addUtilityCategory = async (category: Omit<UtilityCategory, 'id'>) => {
+    const { data, error } = await supabase.from('utility_categories').insert([category]).select();
+    if (error) {
+      toast.error("Erreur lors de l'ajout de la catégorie.");
+    } else if (data) {
+      setUtilityCategories(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+    }
   };
 
-  const updateUtilityCategory = (updatedCategory: UtilityCategory) => {
-    setUtilityCategories(prev =>
-      prev.map(c => (c.id === updatedCategory.id ? updatedCategory : c))
-    );
+  const updateUtilityCategory = async (updatedCategory: UtilityCategory) => {
+    const { error } = await supabase.from('utility_categories').update(updatedCategory).eq('id', updatedCategory.id);
+    if (error) {
+      toast.error("Erreur lors de la mise à jour de la catégorie.");
+    } else {
+      setUtilityCategories(prev =>
+        prev.map(c => (c.id === updatedCategory.id ? updatedCategory : c)).sort((a, b) => a.name.localeCompare(b.name))
+      );
+    }
   };
 
-  const deleteUtilityCategory = (categoryId: string) => {
-    setUtilityCategories(prev => prev.filter(c => c.id !== categoryId));
+  const deleteUtilityCategory = async (categoryId: string) => {
+    const { error } = await supabase.from('utility_categories').delete().eq('id', categoryId);
+    if (error) {
+      toast.error("Erreur lors de la suppression de la catégorie.");
+    } else {
+      setUtilityCategories(prev => prev.filter(c => c.id !== categoryId));
+    }
   };
 
   const getUtilityCategoryById = (categoryId: string) => {
@@ -50,7 +68,7 @@ export const UtilityCategoryProvider = ({ children }: { children: ReactNode }) =
   };
 
   return (
-    <UtilityCategoryContext.Provider value={{ utilityCategories, addUtilityCategory, updateUtilityCategory, deleteUtilityCategory, getUtilityCategoryById }}>
+    <UtilityCategoryContext.Provider value={{ utilityCategories, addUtilityCategory, updateUtilityCategory, deleteUtilityCategory, getUtilityCategoryById, loading }}>
       {children}
     </UtilityCategoryContext.Provider>
   );

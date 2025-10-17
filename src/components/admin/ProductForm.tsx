@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUtilityCategories } from "@/context/UtilityCategoryContext";
 import { useBrands } from "@/context/BrandContext";
+import { useEffect, useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
@@ -17,7 +18,7 @@ const formSchema = z.object({
   price: z.coerce.number().min(0, { message: "Le prix doit être positif." }),
   utilityCategoryId: z.string().nullable(),
   brandId: z.string().nullable(),
-  image_url: z.string().optional(),
+  image_url: z.any().optional(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -39,11 +40,24 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
       price: 0,
       utilityCategoryId: null,
       brandId: null,
-      image_url: "",
+      image_url: null,
     },
   });
 
-  const currentImage = form.watch("image_url");
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null);
+  const imageValue = form.watch("image_url");
+
+  useEffect(() => {
+    if (imageValue instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(imageValue);
+    } else if (typeof imageValue === 'string') {
+      setImagePreview(imageValue);
+    }
+  }, [imageValue]);
 
   return (
     <Form {...form}>
@@ -151,19 +165,12 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
                       type="file" 
                       accept="image/*"
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            field.onChange(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
+                        field.onChange(e.target.files?.[0] || null);
                       }}
                     />
                   </FormControl>
                   <FormMessage />
-                  {currentImage && <img src={currentImage} alt="Aperçu" className="mt-4 w-32 h-32 object-cover rounded-md border" />}
+                  {imagePreview && <img src={imagePreview} alt="Aperçu" className="mt-4 w-32 h-32 object-cover rounded-md border" />}
                 </FormItem>
               )}
             />

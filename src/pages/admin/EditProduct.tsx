@@ -14,14 +14,18 @@ const EditProduct = () => {
 
   const product = id ? getProductById(id) : undefined;
 
-  const handleSubmit = (data: any) => {
-    if (!id) return;
+  const handleSubmit = async (data: any) => {
+    if (!product) return;
     setIsSaving(true);
-    updateProduct({ ...data, id });
+    
+    const { image_url, ...productData } = data;
+    const imageFile = image_url instanceof File ? image_url : undefined;
+    
+    await updateProduct({ ...product, ...productData }, imageFile);
+    
+    setIsSaving(false);
     toast.success("Produit mis à jour avec succès !");
-    setTimeout(() => {
-      navigate("/admin");
-    }, 500);
+    navigate("/admin");
   };
 
   if (!product) {

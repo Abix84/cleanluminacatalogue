@@ -9,13 +9,12 @@ const AddProduct = () => {
   const { addProduct } = useProducts();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async (data: any) => {
     setIsSaving(true);
-    addProduct(data);
+    await addProduct(data);
+    setIsSaving(false);
     toast.success("Produit ajouté avec succès !");
-    setTimeout(() => {
-      navigate("/admin");
-    }, 500);
+    navigate("/admin");
   };
 
   return (
