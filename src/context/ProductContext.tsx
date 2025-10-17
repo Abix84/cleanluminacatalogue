@@ -86,12 +86,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       brand_id: brandId,
     };
     
-    const { data, error } = await supabase.from('products').insert([productToInsert]).select();
+    const { error } = await supabase.from('products').insert([productToInsert]);
     if (error) {
       toast.error("Erreur lors de l'ajout du produit.");
       console.error(error);
-    } else if (data) {
-      setProducts(prev => [...prev, toCamelCase(data[0])].sort((a, b) => a.name.localeCompare(b.name)));
+    } else {
+      await fetchProducts();
     }
   };
 
@@ -114,15 +114,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       brand_id: brandId,
     };
 
-    const { data, error } = await supabase.from('products').update(productToUpdate).eq('id', productToUpdate.id).select();
+    const { error } = await supabase.from('products').update(productToUpdate).eq('id', productToUpdate.id);
     if (error) {
       toast.error("Erreur lors de la mise à jour du produit.");
       console.error(error);
-    } else if (data) {
-      const updatedProduct = toCamelCase(data[0]);
-      setProducts(prev =>
-        prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p)).sort((a, b) => a.name.localeCompare(b.name))
-      );
+    } else {
+      await fetchProducts();
     }
   };
 
@@ -136,7 +133,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (error) {
       toast.error("Erreur lors de la suppression du produit.");
     } else {
-      setProducts(prev => prev.filter(p => p.id !== productId));
+      await fetchProducts();
     }
   };
 
