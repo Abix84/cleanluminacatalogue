@@ -86,12 +86,18 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       brand_id: brandId,
     };
     
-    const { error } = await supabase.from('products').insert([productToInsert]);
+    const { data, error } = await supabase
+      .from('products')
+      .insert([productToInsert])
+      .select()
+      .single();
+
     if (error) {
       toast.error("Erreur lors de l'ajout du produit.");
       console.error(error);
-    } else {
-      await fetchProducts();
+    } else if (data) {
+      const newProduct = toCamelCase(data);
+      setProducts(prev => [...prev, newProduct].sort((a, b) => a.name.localeCompare(b.name)));
     }
   };
 
@@ -114,12 +120,21 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       brand_id: brandId,
     };
 
-    const { error } = await supabase.from('products').update(productToUpdate).eq('id', productToUpdate.id);
+    const { data, error } = await supabase
+      .from('products')
+      .update(productToUpdate)
+      .eq('id', productToUpdate.id)
+      .select()
+      .single();
+
     if (error) {
       toast.error("Erreur lors de la mise à jour du produit.");
       console.error(error);
-    } else {
-      await fetchProducts();
+    } else if (data) {
+      const updatedProduct = toCamelCase(data);
+      setProducts(prev =>
+        prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p)).sort((a, b) => a.name.localeCompare(b.name))
+      );
     }
   };
 
@@ -133,7 +148,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     if (error) {
       toast.error("Erreur lors de la suppression du produit.");
     } else {
-      await fetchProducts();
+      setProducts(prev => prev.filter(p => p.id !== productId));
     }
   };
 
