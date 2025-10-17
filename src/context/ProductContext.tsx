@@ -41,6 +41,18 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     fetchProducts();
   }, []);
 
+  const deleteImageByUrl = async (imageUrl: string) => {
+    if (!imageUrl || imageUrl.includes('placeholder.svg')) return;
+    try {
+      const { error } = await supabase.functions.invoke('delete-image', {
+        body: { imageUrl },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to delete old image:', error);
+    }
+  };
+
   const uploadImage = async (file: File): Promise<string | null> => {
     const fileName = `${uuidv4()}-${file.name}`;
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(fileName, file);
@@ -71,7 +83,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProduct = async (updatedProductData: Product, imageFile?: File) => {
     let imageUrl = updatedProductData.image_url;
+
     if (imageFile) {
+      const originalProduct = products.find(p => p.id === updatedProductData.id);
+      if (originalProduct && originalProduct.image_url) {
+        await deleteImageByUrl(originalProduct.image_url);
+      }
       imageUrl = await uploadImage(imageFile);
     }
 
@@ -88,6 +105,11 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteProduct = async (productId: string) => {
+    const productToDelete = products.find(p => p.id === productId);
+    if (productToDelete && productToDelete.image_url) {
+      await deleteImageByUrl(productToDelete.image_url);
+    }
+
     const { error } = await supabase.from('products').delete().eq('id', productId);
     if (error) {
       toast.error("Erreur lors de la suppression du produit.");
