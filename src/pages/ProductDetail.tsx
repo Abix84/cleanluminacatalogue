@@ -33,7 +33,7 @@ const ProductDetail = () => {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="grid md:grid-cols-2 gap-8">
-          <Skeleton className="w-full h-[400px] rounded-lg" />
+          <Skeleton className="w-full h-auto aspect-square rounded-lg" />
           <div className="space-y-4">
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-6 w-1/4" />
@@ -62,13 +62,13 @@ const ProductDetail = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-                <AspectRatio ratio={1}>
+                <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border">
                     <img
                         src={product.image_url || "/placeholder.svg"}
                         alt={product.name}
-                        className="rounded-lg object-cover w-full h-full border"
+                        className="rounded-lg object-contain w-full h-full"
                     />
                 </AspectRatio>
             </div>
