@@ -3,7 +3,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/utils";
-import { useCategories } from "@/context/CategoryContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { Badge } from "./ui/badge";
 
 interface ProductCardProps {
@@ -12,8 +13,10 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
-  const { getCategoryById } = useCategories();
-  const category = product.categoryId ? getCategoryById(product.categoryId) : null;
+  const { getUtilityCategoryById } = useUtilityCategories();
+  const { getBrandById } = useBrands();
+  const category = product.utilityCategoryId ? getUtilityCategoryById(product.utilityCategoryId) : null;
+  const brand = product.brandId ? getBrandById(product.brandId) : null;
 
   const handleImageClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,10 +47,8 @@ const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
           )}
         </CardHeader>
         <CardContent className="flex-grow p-4">
+          {brand && <p className="text-xs text-muted-foreground mb-1">{brand.name}</p>}
           <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {product.description || "Aucune description disponible."}
-          </p>
         </CardContent>
         <CardFooter className="p-4 pt-0">
           <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">

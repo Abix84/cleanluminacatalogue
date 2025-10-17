@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCategories } from "@/context/CategoryContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   description: z.string().optional(),
   price: z.coerce.number().min(0, { message: "Le prix doit être positif." }),
-  categoryId: z.string().nullable(),
+  utilityCategoryId: z.string().nullable(),
+  brandId: z.string().nullable(),
   image_url: z.string().optional(),
 });
 
@@ -27,14 +29,16 @@ interface ProductFormProps {
 }
 
 const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
-  const { categories } = useCategories();
+  const { utilityCategories } = useUtilityCategories();
+  const { brands } = useBrands();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       name: "",
       description: "",
       price: 0,
-      categoryId: null,
+      utilityCategoryId: null,
+      brandId: null,
       image_url: "",
     },
   });
@@ -90,10 +94,10 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
             />
             <FormField
               control={form.control}
-              name="categoryId"
+              name="utilityCategoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Catégorie</FormLabel>
+                  <FormLabel>Catégorie d'utilité</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
                     <FormControl>
                       <SelectTrigger>
@@ -101,9 +105,33 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((cat) => (
+                      {utilityCategories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="brandId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Marque</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez une marque" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

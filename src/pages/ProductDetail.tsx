@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useProducts } from "@/context/ProductContext";
-import { useCategories } from "@/context/CategoryContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { formatPrice } from "@/lib/utils";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { getProductById } = useProducts();
-  const { getCategoryById } = useCategories();
+  const { getUtilityCategoryById } = useUtilityCategories();
+  const { getBrandById } = useBrands();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,8 @@ const ProductDetail = () => {
     }
   }, [id, getProductById]);
 
-  const category = product?.categoryId ? getCategoryById(product.categoryId) : null;
+  const category = product?.utilityCategoryId ? getUtilityCategoryById(product.utilityCategoryId) : null;
+  const brand = product?.brandId ? getBrandById(product.brandId) : null;
 
   if (loading || product === undefined) {
     return (
@@ -76,14 +79,18 @@ const ProductDetail = () => {
                 </AspectRatio>
             </div>
             <div className="flex flex-col">
-                {category && (
-                    <Badge
-                      className="w-fit mb-2"
-                      style={{ backgroundColor: category.color, color: '#fff' }}
-                    >
-                      {category.name}
-                    </Badge>
-                )}
+                <div className="flex items-center gap-2 mb-2">
+                  {category && (
+                      <Badge
+                        style={{ backgroundColor: category.color, color: '#fff' }}
+                      >
+                        {category.name}
+                      </Badge>
+                  )}
+                  {brand && (
+                    <Badge variant="outline">{brand.name}</Badge>
+                  )}
+                </div>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
                 <div className="text-4xl font-extrabold my-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
                   {formatPrice(product.price)}

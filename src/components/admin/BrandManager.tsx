@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCategories } from "@/context/CategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { useProducts } from "@/context/ProductContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,76 +19,65 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const CategoryManager = () => {
-  const { categories, addCategory, deleteCategory } = useCategories();
+const BrandManager = () => {
+  const { brands, addBrand, deleteBrand } = useBrands();
   const { products } = useProducts();
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState("#0A66DD");
+  const [newBrandName, setNewBrandName] = useState("");
 
-  const handleAddCategory = () => {
-    if (newCategoryName.trim() === "") {
-      toast.error("Le nom de la catégorie ne peut pas être vide.");
+  const handleAddBrand = () => {
+    if (newBrandName.trim() === "") {
+      toast.error("Le nom de la marque ne peut pas être vide.");
       return;
     }
-    addCategory({ name: newCategoryName, color: newCategoryColor });
-    toast.success(`Catégorie "${newCategoryName}" ajoutée.`);
-    setNewCategoryName("");
+    addBrand({ name: newBrandName });
+    toast.success(`Marque "${newBrandName}" ajoutée.`);
+    setNewBrandName("");
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) return;
+  const handleDeleteBrand = (brandId: string) => {
+    const brand = brands.find(b => b.id === brandId);
+    if (!brand) return;
 
-    const productsInCategory = products.filter(p => p.categoryId === categoryId).length;
-    if (productsInCategory > 0) {
-      toast.error(`Impossible de supprimer "${category.name}", car ${productsInCategory} produit(s) y sont associés.`);
+    const productsInBrand = products.filter(p => p.brandId === brandId).length;
+    if (productsInBrand > 0) {
+      toast.error(`Impossible de supprimer "${brand.name}", car ${productsInBrand} produit(s) y sont associés.`);
       return;
     }
 
-    deleteCategory(categoryId);
-    toast.success(`Catégorie "${category.name}" supprimée.`);
+    deleteBrand(brandId);
+    toast.success(`Marque "${brand.name}" supprimée.`);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gestion des Catégories</CardTitle>
-        <CardDescription>Ajoutez ou supprimez des catégories de produits.</CardDescription>
+        <CardTitle>Gestion des Marques</CardTitle>
+        <CardDescription>Ajoutez ou supprimez des marques de produits.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 mb-4">
           <Input
-            placeholder="Nom de la nouvelle catégorie"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="Nom de la nouvelle marque"
+            value={newBrandName}
+            onChange={(e) => setNewBrandName(e.target.value)}
           />
-          <Input
-            type="color"
-            value={newCategoryColor}
-            onChange={(e) => setNewCategoryColor(e.target.value)}
-            className="w-12 p-1"
-          />
-          <Button onClick={handleAddCategory}>
+          <Button onClick={handleAddBrand}>
             <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
           </Button>
         </div>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Couleur</TableHead>
               <TableHead>Nom</TableHead>
               <TableHead>Produits</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((cat) => (
-              <TableRow key={cat.id}>
-                <TableCell>
-                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: cat.color }} />
-                </TableCell>
-                <TableCell className="font-medium">{cat.name}</TableCell>
-                <TableCell>{products.filter(p => p.categoryId === cat.id).length}</TableCell>
+            {brands.map((brand) => (
+              <TableRow key={brand.id}>
+                <TableCell className="font-medium">{brand.name}</TableCell>
+                <TableCell>{products.filter(p => p.brandId === brand.id).length}</TableCell>
                 <TableCell className="text-right">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -100,12 +89,12 @@ const CategoryManager = () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Cette action est irréversible. La catégorie "{cat.name}" sera supprimée.
+                          Cette action est irréversible. La marque "{brand.name}" sera supprimée.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteCategory(cat.id)}>
+                        <AlertDialogAction onClick={() => handleDeleteBrand(brand.id)}>
                           Supprimer
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -121,4 +110,4 @@ const CategoryManager = () => {
   );
 };
 
-export default CategoryManager;
+export default BrandManager;

@@ -1,23 +1,24 @@
 import { useEffect, useState, useMemo } from "react";
-import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Terminal, PackageSearch } from "lucide-react";
+import { PackageSearch } from "lucide-react";
 import { useProducts } from "@/context/ProductContext";
-import { useCategories } from "@/context/CategoryContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
 const ProductList = () => {
   const { products: allProducts } = useProducts();
-  const { categories } = useCategories();
+  const { utilityCategories } = useUtilityCategories();
+  const { brands } = useBrands();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState("all");
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,8 +26,9 @@ const ProductList = () => {
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = allProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || product.categoryId === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesCategory = selectedCategory === 'all' || product.utilityCategoryId === selectedCategory;
+      const matchesBrand = selectedBrand === 'all' || product.brandId === selectedBrand;
+      return matchesSearch && matchesCategory && matchesBrand;
     });
 
     switch (sortOption) {
@@ -47,7 +49,7 @@ const ProductList = () => {
     }
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortOption, allProducts]);
+  }, [searchTerm, selectedCategory, selectedBrand, sortOption, allProducts]);
 
   useEffect(() => {
     setLoading(true);
@@ -76,26 +78,37 @@ const ProductList = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Input
           placeholder="Rechercher un produit..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="md:col-span-1"
+          className="lg:col-span-1"
         />
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger>
             <SelectValue placeholder="Toutes les catégories" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes les catégories</SelectItem>
-            {categories.map(category => (
+            {utilityCategories.map(category => (
               <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+          <SelectTrigger>
+            <SelectValue placeholder="Toutes les marques" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les marques</SelectItem>
+            {brands.map(brand => (
+              <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger>
             <SelectValue placeholder="Trier par" />
           </SelectTrigger>
           <SelectContent>

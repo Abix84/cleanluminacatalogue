@@ -1,7 +1,12 @@
-export interface Category {
+export interface UtilityCategory {
   id: string;
   name: string;
   color: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
 }
 
 export interface Product {
@@ -10,5 +15,6 @@ export interface Product {
   description: string | null;
   price: number;
   image_url: string | null;
-  categoryId: string | null;
+  utilityCategoryId: string | null;
+  brandId: string | null;
 }

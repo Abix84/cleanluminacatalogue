@@ -7,7 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import { ProductProvider } from "./context/ProductContext";
-import { CategoryProvider } from "./context/CategoryContext";
+import { UtilityCategoryProvider } from "./context/UtilityCategoryContext";
+import { BrandProvider } from "./context/BrandContext";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -21,24 +22,26 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <TooltipProvider>
-        <CategoryProvider>
-          <ProductProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Layout><Index /></Layout>} />
-                <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
-                
-                <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
-                <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
+        <UtilityCategoryProvider>
+          <BrandProvider>
+            <ProductProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Layout><Index /></Layout>} />
+                  <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+                  
+                  <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                  <Route path="/admin/products/new" element={<AdminLayout><AddProduct /></AdminLayout>} />
+                  <Route path="/admin/products/edit/:id" element={<AdminLayout><EditProduct /></AdminLayout>} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </ProductProvider>
-        </CategoryProvider>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </ProductProvider>
+          </BrandProvider>
+        </UtilityCategoryProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
