@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2, PlusCircle, Pencil } from "lucide-react";
+import { Trash2, PlusCircle, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -34,19 +34,23 @@ const UtilityCategoryManager = () => {
   const { products } = useProducts();
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#0A66DD");
+  const [isAdding, setIsAdding] = useState(false);
 
   const [editingCategory, setEditingCategory] = useState<UtilityCategory | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedColor, setEditedColor] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategoryName.trim() === "") {
       toast.error("Le nom de la catégorie ne peut pas être vide.");
       return;
     }
-    addUtilityCategory({ name: newCategoryName, color: newCategoryColor });
+    setIsAdding(true);
+    await addUtilityCategory({ name: newCategoryName, color: newCategoryColor });
     toast.success(`Catégorie "${newCategoryName}" ajoutée.`);
     setNewCategoryName("");
+    setIsAdding(false);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
@@ -69,11 +73,13 @@ const UtilityCategoryManager = () => {
     setEditedColor(category.color);
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (editingCategory && editedName.trim() !== "") {
-      updateUtilityCategory({ ...editingCategory, name: editedName, color: editedColor });
+      setIsSaving(true);
+      await updateUtilityCategory({ ...editingCategory, name: editedName, color: editedColor });
       toast.success("Catégorie mise à jour.");
       setEditingCategory(null);
+      setIsSaving(false);
     } else {
       toast.error("Le nom ne peut pas être vide.");
     }
@@ -92,15 +98,22 @@ const UtilityCategoryManager = () => {
               placeholder="Nom de la nouvelle catégorie"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
+              disabled={isAdding}
             />
             <Input
               type="color"
               value={newCategoryColor}
               onChange={(e) => setNewCategoryColor(e.target.value)}
               className="w-12 p-1"
+              disabled={isAdding}
             />
-            <Button onClick={handleAddCategory}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
+            <Button onClick={handleAddCategory} disabled={isAdding}>
+              {isAdding ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="h-4 w-4 mr-2" />
+              )}
+              {isAdding ? "Ajout..." : "Ajouter"}
             </Button>
           </div>
           <Table>
@@ -175,7 +188,10 @@ const UtilityCategoryManager = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingCategory(null)}>Annuler</Button>
-            <Button onClick={handleSaveChanges}>Enregistrer</Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

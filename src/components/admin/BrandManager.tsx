@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2, PlusCircle, Pencil } from "lucide-react";
+import { Trash2, PlusCircle, Pencil, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -33,18 +33,22 @@ const BrandManager = () => {
   const { brands, addBrand, deleteBrand, updateBrand } = useBrands();
   const { products } = useProducts();
   const [newBrandName, setNewBrandName] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editedName, setEditedName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleAddBrand = () => {
+  const handleAddBrand = async () => {
     if (newBrandName.trim() === "") {
       toast.error("Le nom de la marque ne peut pas être vide.");
       return;
     }
-    addBrand({ name: newBrandName });
+    setIsAdding(true);
+    await addBrand({ name: newBrandName });
     toast.success(`Marque "${newBrandName}" ajoutée.`);
     setNewBrandName("");
+    setIsAdding(false);
   };
 
   const handleDeleteBrand = (brandId: string) => {
@@ -66,11 +70,13 @@ const BrandManager = () => {
     setEditedName(brand.name);
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (editingBrand && editedName.trim() !== "") {
-      updateBrand({ ...editingBrand, name: editedName });
+      setIsSaving(true);
+      await updateBrand({ ...editingBrand, name: editedName });
       toast.success("Marque mise à jour.");
       setEditingBrand(null);
+      setIsSaving(false);
     } else {
       toast.error("Le nom ne peut pas être vide.");
     }
@@ -89,9 +95,15 @@ const BrandManager = () => {
               placeholder="Nom de la nouvelle marque"
               value={newBrandName}
               onChange={(e) => setNewBrandName(e.target.value)}
+              disabled={isAdding}
             />
-            <Button onClick={handleAddBrand}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Ajouter
+            <Button onClick={handleAddBrand} disabled={isAdding}>
+              {isAdding ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="h-4 w-4 mr-2" />
+              )}
+              {isAdding ? "Ajout..." : "Ajouter"}
             </Button>
           </div>
           <Table>
@@ -158,7 +170,10 @@ const BrandManager = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingBrand(null)}>Annuler</Button>
-            <Button onClick={handleSaveChanges}>Enregistrer</Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
