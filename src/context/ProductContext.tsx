@@ -21,6 +21,13 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 const BUCKET_NAME = 'product-images';
 
+// Helper to convert snake_case from DB to camelCase for frontend
+const toCamelCase = (product: any): Product => ({
+  ...product,
+  utilityCategoryId: product.utility_category_id,
+  brandId: product.brand_id,
+});
+
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +39,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       toast.error("Erreur lors de la récupération des produits.");
       console.error(error);
     } else {
-      setProducts(data || []);
+      setProducts((data || []).map(toCamelCase));
     }
     setLoading(false);
   };
@@ -71,13 +78,20 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       imageUrl = await uploadImage(productData.image_url);
     }
 
-    const productToInsert = { ...productData, image_url: imageUrl };
+    const { image_url: _, utilityCategoryId, brandId, ...rest } = productData;
+    const productToInsert = {
+      ...rest,
+      image_url: imageUrl,
+      utility_category_id: utilityCategoryId,
+      brand_id: brandId,
+    };
     
     const { data, error } = await supabase.from('products').insert([productToInsert]).select();
     if (error) {
       toast.error("Erreur lors de l'ajout du produit.");
+      console.error(error);
     } else if (data) {
-      setProducts(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+      setProducts(prev => [...prev, toCamelCase(data[0])].sort((a, b) => a.name.localeCompare(b.name)));
     }
   };
 
@@ -92,14 +106,22 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       imageUrl = await uploadImage(imageFile);
     }
 
-    const productToUpdate = { ...updatedProductData, image_url: imageUrl };
+    const { utilityCategoryId, brandId, ...rest } = updatedProductData;
+    const productToUpdate = {
+      ...rest,
+      image_url: imageUrl,
+      utility_category_id: utilityCategoryId,
+      brand_id: brandId,
+    };
 
-    const { error } = await supabase.from('products').update(productToUpdate).eq('id', productToUpdate.id);
+    const { data, error } = await supabase.from('products').update(productToUpdate).eq('id', productToUpdate.id).select();
     if (error) {
       toast.error("Erreur lors de la mise à jour du produit.");
-    } else {
+      console.error(error);
+    } else if (data) {
+      const updatedProduct = toCamelCase(data[0]);
       setProducts(prev =>
-        prev.map(p => (p.id === productToUpdate.id ? productToUpdate : p)).sort((a, b) => a.name.localeCompare(b.name))
+        prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p)).sort((a, b) => a.name.localeCompare(b.name))
       );
     }
   };
