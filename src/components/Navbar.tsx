@@ -7,7 +7,8 @@ const Navbar = () => {
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            <img src="/logo.png" alt="CleanExpress Logo" className="h-10 w-auto" />
+            <img src="/logo.png" alt="CleanExpress Logo" className="h-10 w-auto block dark:hidden" />
+            <img src="/logo_darkmode.png" alt="CleanExpress Logo" className="h-10 w-auto hidden dark:block" />
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">

@@ -13,7 +13,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-16 items-center border-b px-4 lg:px-6">
             <Link to="/" className="flex items-center gap-2 font-semibold">
-              <img src="/logo.png" alt="CleanExpress Logo" className="h-8 w-auto" />
+              <img src="/logo.png" alt="CleanExpress Logo" className="h-8 w-auto block dark:hidden" />
+              <img src="/logo_darkmode.png" alt="CleanExpress Logo" className="h-8 w-auto hidden dark:block" />
             </Link>
           </div>
           <div className="flex-1">
