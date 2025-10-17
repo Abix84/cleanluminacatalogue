@@ -7,12 +7,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCategories } from "@/context/CategoryContext";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   description: z.string().optional(),
   price: z.coerce.number().min(0, { message: "Le prix doit être positif." }),
-  category: z.string().optional(),
+  categoryId: z.string().nullable(),
   image_url: z.string().optional(),
 });
 
@@ -25,13 +27,14 @@ interface ProductFormProps {
 }
 
 const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
+  const { categories } = useCategories();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       name: "",
       description: "",
       price: 0,
-      category: "",
+      categoryId: null,
       image_url: "",
     },
   });
@@ -66,7 +69,7 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Description du produit" {...field} />
+                    <Textarea placeholder="Description du produit" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -87,13 +90,24 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
             />
             <FormField
               control={form.control}
-              name="category"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Catégorie</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Catégorie du produit" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez une catégorie" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

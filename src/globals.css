@@ -4,65 +4,65 @@
 
 @layer base {
   :root {
-    --background: 240 17% 97%; /* Arena Blanquecina */
-    --foreground: 240 10% 3.9%;
+    --background: 220 20% 97%;
+    --foreground: 220 10% 10%;
 
-    --card: 0 0% 100%; /* Blanco */
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 220 10% 10%;
 
-    --primary: 212 92% 45%; /* Azul Oceáno */
+    --primary: 215 91% 45%; /* #0A66DD */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 44 23% 41%; /* Fiebre Dorada */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 47 100% 50%; /* #FFCA00 */
+    --secondary-foreground: 220 10% 10%;
 
-    --muted: 240 5% 90%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 220 20% 92%;
+    --muted-foreground: 220 10% 40%;
 
-    --accent: 12 100% 50%; /* Deutsch Laranja */
-    --accent-foreground: 0 0% 100%;
+    --accent: 193 98% 93%; /* #ABEEFE */
+    --accent-foreground: 215 91% 25%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 12 100% 50%; /* #FF3300 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 212 92% 45%;
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 215 91% 45%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 220 15% 10%;
+    --foreground: 220 15% 95%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 15% 12%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 220 15% 95%;
 
-    --primary: 212 92% 55%;
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 215 81% 65%;
+    --primary-foreground: 220 15% 10%;
 
-    --secondary: 44 23% 51%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 47 90% 60%;
+    --secondary-foreground: 220 15% 10%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 12 100% 60%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 215 91% 25%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 12 90% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 212 92% 55%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 215 81% 65%;
   }
 }
 
@@ -72,6 +72,6 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }

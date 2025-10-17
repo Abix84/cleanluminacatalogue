@@ -1,44 +1,59 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Terminal } from "lucide-react";
+import { Terminal, PackageSearch } from "lucide-react";
 import { useProducts } from "@/context/ProductContext";
+import { useCategories } from "@/context/CategoryContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+type SortOption = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
 const ProductList = () => {
   const { products: allProducts } = useProducts();
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const { categories } = useCategories();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [categories, setCategories] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>("default");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const uniqueCategories = [...new Set(allProducts.map(item => item.category).filter(Boolean) as string[])];
-    setCategories(uniqueCategories);
-  }, [allProducts]);
-
-  useEffect(() => {
-    setLoading(true);
-    
-    const filtered = allProducts.filter(product => {
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = allProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || product.categoryId === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
-    setTimeout(() => {
-      setFilteredProducts(filtered);
-      setLoading(false);
-    }, 300);
+    switch (sortOption) {
+      case "price-asc":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case "name-asc":
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        break;
+    }
 
-  }, [searchTerm, selectedCategory, allProducts]);
+    return filtered;
+  }, [searchTerm, selectedCategory, sortOption, allProducts]);
+
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, [filteredAndSortedProducts]);
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -51,8 +66,8 @@ const ProductList = () => {
         <div key={i} className="flex flex-col space-y-3">
           <Skeleton className="h-[225px] w-full rounded-xl" />
           <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         </div>
       ))}
@@ -61,39 +76,51 @@ const ProductList = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Input
           placeholder="Rechercher un produit..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-grow"
+          className="md:col-span-1"
         />
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Toutes les catégories" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes les catégories</SelectItem>
             {categories.map(category => (
-              <SelectItem key={category} value={category}>{category}</SelectItem>
+              <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Trier par" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Par défaut</SelectItem>
+            <SelectItem value="price-asc">Prix croissant</SelectItem>
+            <SelectItem value="price-desc">Prix décroissant</SelectItem>
+            <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+            <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {loading ? renderSkeletons() : (
         <>
-          {filteredProducts.length === 0 ? (
-            <Alert>
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Aucun Résultat</AlertTitle>
-              <AlertDescription>
-                Aucun produit ne correspond à votre recherche. Essayez d'autres mots-clés ou filtres.
-              </AlertDescription>
-            </Alert>
+          {filteredAndSortedProducts.length === 0 ? (
+            <div className="text-center py-16">
+              <PackageSearch className="mx-auto h-16 w-16 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Aucun produit trouvé</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Essayez de modifier vos filtres ou votre recherche.
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {filteredAndSortedProducts.map((product) => (
                 <ProductCard 
                   key={product.id} 
                   product={product} 

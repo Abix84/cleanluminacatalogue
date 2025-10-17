@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useProducts } from "@/context/ProductContext";
+import { useCategories } from "@/context/CategoryContext";
 import { formatPrice } from "@/lib/utils";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { getProductById } = useProducts();
+  const { getCategoryById } = useCategories();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
@@ -29,10 +30,12 @@ const ProductDetail = () => {
     }
   }, [id, getProductById]);
 
+  const category = product?.categoryId ? getCategoryById(product.categoryId) : null;
+
   if (loading || product === undefined) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-12">
           <Skeleton className="w-full h-auto aspect-square rounded-lg" />
           <div className="space-y-4">
             <Skeleton className="h-8 w-3/4" />
@@ -64,7 +67,7 @@ const ProductDetail = () => {
     <div className="container mx-auto py-8 px-4">
         <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-                <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border">
+                <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border shadow-lg">
                     <img
                         src={product.image_url || "/placeholder.svg"}
                         alt={product.name}
@@ -73,19 +76,23 @@ const ProductDetail = () => {
                 </AspectRatio>
             </div>
             <div className="flex flex-col">
-                {product.category && (
-                    <Badge variant="secondary" className="w-fit mb-2">{product.category}</Badge>
+                {category && (
+                    <Badge
+                      className="w-fit mb-2"
+                      style={{ backgroundColor: category.color, color: '#fff' }}
+                    >
+                      {category.name}
+                    </Badge>
                 )}
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
-                <p className="text-3xl font-bold text-primary my-4">{formatPrice(product.price)}</p>
-                <p className="text-muted-foreground leading-relaxed">
+                <div className="text-4xl font-extrabold my-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                  {formatPrice(product.price)}
+                </div>
+                <p className="text-muted-foreground leading-relaxed text-base">
                     {product.description || "Aucune description disponible."}
                 </p>
             </div>
         </div>
-        <footer className="mt-12">
-            <MadeWithDyad />
-        </footer>
     </div>
   );
 };
