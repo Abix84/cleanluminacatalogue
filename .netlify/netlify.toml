@@ -38,3 +38,5 @@ force = false
 [redirects.conditions]
 
 [redirects.headers]
+[build.environment]
+SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_PUBLISHABLE_KEY"
