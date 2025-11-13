@@ -74,4 +74,16 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+
+  /* Variables CSS pour les thèmes de compagnie (définies dynamiquement via useCompanyThemeCSS) */
+  :root {
+    --company-primary: var(--primary);
+    --company-secondary: var(--secondary);
+    --company-accent: var(--accent);
+    --company-background: var(--background);
+    --company-foreground: var(--foreground);
+    --company-border: var(--border);
+    --company-muted: var(--muted);
+    --company-muted-foreground: var(--muted-foreground);
+  }
 }

@@ -56,6 +56,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Couleurs de compagnie (utilisées via variables CSS dynamiques)
+        company: {
+          primary: "var(--company-primary)",
+          secondary: "var(--company-secondary)",
+          accent: "var(--company-accent)",
+          background: "var(--company-background)",
+          foreground: "var(--company-foreground)",
+          border: "var(--company-border)",
+          muted: "var(--company-muted)",
+          "muted-foreground": "var(--company-muted-foreground)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,83 +1,161 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Brand } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-interface BrandContextType {
-  brands: Brand[];
-  addBrand: (brand: Omit<Brand, 'id'>) => Promise<void>;
-  updateBrand: (updatedBrand: Brand) => Promise<void>;
-  deleteBrand: (brandId: string) => Promise<void>;
-  getBrandById: (brandId: string) => Brand | undefined;
-  loading: boolean;
-}
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { Brand, BrandFormData, BrandContextType, ApiError } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
+
+// ==========================================
+// PROVIDER COMPONENT
+// ==========================================
 
 export const BrandProvider = ({ children }: { children: ReactNode }) => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ApiError | null>(null);
 
+  /**
+   * Fetches all brands from Supabase
+   */
   const fetchBrands = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from('brands').select('*').order('name');
-    if (error) {
-      toast.error("Erreur lors de la récupération des marques.");
-      console.error(error);
-    } else {
-      setBrands(data || []);
+    try {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      setBrands((data || []).sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur lors de la récupération des marques.";
+      const apiError: ApiError = { message, details: err };
+      setError(apiError);
+      toast.error(message);
+      console.error("Error fetching brands:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchBrands();
   }, []);
 
-  const addBrand = async (brand: Omit<Brand, 'id'>) => {
-    const { data, error } = await supabase.from('brands').insert([brand]).select();
-    if (error) {
-      toast.error("Erreur lors de l'ajout de la marque.");
-    } else if (data) {
-      setBrands(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+  /**
+   * Adds a new brand to Supabase
+   */
+  const addBrand = async (brandData: BrandFormData): Promise<void> => {
+    try {
+      setError(null);
+      const { data, error } = await supabase
+        .from("brands")
+        .insert([brandData])
+        .select()
+        .single();
+      if (error) throw error;
+      setBrands((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+      toast.success("Marque ajoutée avec succès !");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur lors de l'ajout de la marque.";
+      const apiError: ApiError = { message, details: err };
+      setError(apiError);
+      toast.error(message);
+      console.error("Error adding brand:", err);
+      throw err;
     }
   };
 
-  const updateBrand = async (updatedBrand: Brand) => {
-    const { error } = await supabase.from('brands').update(updatedBrand).eq('id', updatedBrand.id);
-    if (error) {
-      toast.error("Erreur lors de la mise à jour de la marque.");
-    } else {
-      setBrands(prev =>
-        prev.map(b => (b.id === updatedBrand.id ? updatedBrand : b)).sort((a, b) => a.name.localeCompare(b.name))
-      );
+  /**
+   * Updates an existing brand in Supabase
+   */
+  const updateBrand = async (updatedBrand: Brand): Promise<void> => {
+    try {
+      setError(null);
+      const { data, error } = await supabase
+        .from("brands")
+        .update(updatedBrand)
+        .eq("id", updatedBrand.id)
+        .select()
+        .single();
+      if (error) throw error;
+      setBrands((prev) => prev.map((b) => (b.id === updatedBrand.id ? data : b)).sort((a, b) => a.name.localeCompare(b.name)));
+      toast.success("Marque mise à jour avec succès !");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur lors de la mise à jour de la marque.";
+      const apiError: ApiError = { message, details: err };
+      setError(apiError);
+      toast.error(message);
+      console.error("Error updating brand:", err);
+      throw err;
     }
   };
 
-  const deleteBrand = async (brandId: string) => {
-    const { error } = await supabase.from('brands').delete().eq('id', brandId);
-    if (error) {
-      toast.error("Erreur lors de la suppression de la marque.");
-    } else {
-      setBrands(prev => prev.filter(b => b.id !== brandId));
+  /**
+   * Deletes a brand from Supabase
+   */
+  const deleteBrand = async (brandId: string): Promise<void> => {
+    try {
+      setError(null);
+      const { error } = await supabase
+        .from("brands")
+        .delete()
+        .eq("id", brandId);
+      if (error) throw error;
+      setBrands((prev) => prev.filter((b) => b.id !== brandId));
+      toast.success("Marque supprimée avec succès !");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur lors de la suppression de la marque.";
+      const apiError: ApiError = { message, details: err };
+      setError(apiError);
+      toast.error(message);
+      console.error("Error deleting brand:", err);
+      throw err;
     }
   };
 
-  const getBrandById = (brandId: string) => {
-    return brands.find(b => b.id === brandId);
+  /**
+   * Gets a brand by its ID
+   */
+  const getBrandById = (brandId: string): Brand | undefined => {
+    return brands.find((b) => b.id === brandId);
+  };
+
+  const value: BrandContextType = {
+    brands,
+    addBrand,
+    updateBrand,
+    deleteBrand,
+    getBrandById,
+    loading,
+    error,
   };
 
   return (
-    <BrandContext.Provider value={{ brands, addBrand, updateBrand, deleteBrand, getBrandById, loading }}>
-      {children}
-    </BrandContext.Provider>
+    <BrandContext.Provider value={value}>{children}</BrandContext.Provider>
   );
 };
 
-export const useBrands = () => {
+// ==========================================
+// HOOK
+// ==========================================
+
+/**
+ * Hook to use the BrandContext
+ * @throws {Error} if used outside of BrandProvider
+ */
+export const useBrands = (): BrandContextType => {
   const context = useContext(BrandContext);
+
   if (context === undefined) {
-    throw new Error('useBrands must be used within a BrandProvider');
+    throw new Error("useBrands must be used within a BrandProvider");
   }
+
   return context;
 };

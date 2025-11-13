@@ -7,14 +7,29 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 const Login = () => {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        toast.success(`Connexion réussie !`);
-        navigate('/admin');
+    // Écouter les changements d'état d'authentification
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[Login] Auth state change:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session) {
+        console.log('[Login] User signed in:', session.user.email);
+        toast.success('Connexion réussie !');
+        // Naviguer vers la page d'accueil après la connexion
+        // Utiliser un petit délai pour s'assurer que le contexte est mis à jour
+        setTimeout(() => {
+          console.log('[Login] Navigating to / after sign in');
+          navigate('/', { replace: true });
+        }, 100);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[Login] User signed out');
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('[Login] Token refreshed');
+      } else if (event === 'USER_UPDATED') {
+        console.log('[Login] User updated');
       }
     });
 
@@ -23,8 +38,22 @@ const Login = () => {
     };
   }, [navigate]);
 
-  if (session) {
-    return <Navigate to="/admin" replace />;
+  useEffect(() => {
+    // Si on a une session et que le chargement est terminé, naviguer vers la page d'accueil
+    if (session && !loading) {
+      console.log('[Login] Session exists, navigating to /');
+      console.log('[Login] Session details:', { 
+        user: session.user?.email, 
+        loading 
+      });
+      navigate('/', { replace: true });
+    }
+  }, [session, loading, navigate]);
+
+  // Si on a une session, rediriger immédiatement vers la page d'accueil
+  if (session && !loading) {
+    console.log('[Login] Redirecting to / (session exists)');
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -41,6 +70,8 @@ const Login = () => {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={[]}
+          onlyThirdPartyProviders={false}
+          magicLink={false}
           localization={{
             variables: {
               sign_in: {
@@ -71,6 +102,9 @@ const Login = () => {
               },
             },
           }}
+          theme="default"
+          showLinks={true}
+          view="sign_in"
         />
       </div>
     </div>

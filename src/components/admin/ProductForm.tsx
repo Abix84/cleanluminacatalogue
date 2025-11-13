@@ -3,21 +3,45 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
-import { useEffect, useState } from "react";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
+import { useEffect, useState, useRef } from "react";
+import {
+  Upload,
+  Image as ImageIcon,
+  X,
+  Check,
+  AlertCircle,
+  Edit3,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ImageEditor } from "./ImageEditor";
+import { SearchableSelect } from "./SearchableSelect";
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
+  name: z
+    .string()
+    .min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   description: z.string().optional(),
   price: z.coerce.number().min(0, { message: "Le prix doit être positif." }),
   utilityCategoryId: z.string().nullable(),
   brandId: z.string().nullable(),
+  company: z.enum(["CleanExpress", "Lumina Distribution"], {
+    required_error: "Veuillez sélectionner une entreprise",
+  }),
   image_url: z.any().optional(),
 });
 
@@ -27,37 +51,215 @@ interface ProductFormProps {
   initialData?: Product;
   onSubmit: (data: ProductFormValues) => void;
   isSaving: boolean;
+  defaultCompany?: "CleanExpress" | "Lumina Distribution";
 }
 
-const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
+// Max file size: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+
+const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: ProductFormProps) => {
   const { utilityCategories } = useUtilityCategories();
   const { brands } = useBrands();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      description: initialData.description || "",
+      price: initialData.price,
+      utilityCategoryId: initialData.utilityCategoryId,
+      brandId: initialData.brandId,
+      company: initialData.company || undefined,
+      image_url: initialData.image_url,
+    } : {
       name: "",
       description: "",
       price: 0,
       utilityCategoryId: null,
       brandId: null,
+      company: defaultCompany || undefined,
       image_url: null,
     },
   });
 
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url || null);
+  // Filtrer les marques selon l'entreprise sélectionnée
+  const selectedCompany = form.watch("company");
+  const availableBrands = selectedCompany 
+    ? brands.filter((brand) => {
+        if (selectedCompany === "Lumina Distribution") {
+          // Lumina Distribution : seulement "Force Xpress"
+          return brand.name === "Force Xpress";
+        } else if (selectedCompany === "CleanExpress") {
+          // CleanExpress : toutes les marques sauf "Force Xpress"
+          return brand.name !== "Force Xpress";
+        }
+        return true;
+      })
+    : brands;
+
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.image_url || null,
+  );
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const imageValue = form.watch("image_url");
+
+  // Fonction pour redimensionner l'image si elle dépasse 1000x1000px
+  const resizeImageIfNeeded = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        img.onload = () => {
+          // Si l'image est déjà petite, on la garde telle quelle
+          if (img.width <= 1000 && img.height <= 1000) {
+            resolve(file);
+            return;
+          }
+
+          // Calculer les nouvelles dimensions en gardant le ratio
+          let newWidth = img.width;
+          let newHeight = img.height;
+
+          if (img.width > 1000 || img.height > 1000) {
+            const ratio = Math.min(1000 / img.width, 1000 / img.height);
+            newWidth = Math.round(img.width * ratio);
+            newHeight = Math.round(img.height * ratio);
+          }
+
+          // Créer un canvas pour redimensionner
+          const canvas = document.createElement("canvas");
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            // Convertir en blob puis en file
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  const resizedFile = new File([blob], file.name, {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  });
+                  resolve(resizedFile);
+                } else {
+                  resolve(file);
+                }
+              },
+              "image/jpeg",
+              0.92,
+            );
+          } else {
+            resolve(file);
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
 
   useEffect(() => {
     if (imageValue instanceof File) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(imageValue);
-    } else if (typeof imageValue === 'string') {
+      // Validate file
+      if (imageValue.size > MAX_FILE_SIZE) {
+        setImageError("L'image est trop grande (max 5MB)");
+        return;
+      }
+      if (!ACCEPTED_IMAGE_TYPES.includes(imageValue.type)) {
+        setImageError("Format non supporté (JPEG, PNG, WebP uniquement)");
+        return;
+      }
+
+      setImageError(null);
+
+      // Redimensionner l'image si nécessaire avant l'aperçu
+      resizeImageIfNeeded(imageValue).then((resizedFile) => {
+        // Si l'image a été redimensionnée, mettre à jour le formulaire
+        if (resizedFile !== imageValue) {
+          form.setValue("image_url", resizedFile);
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(resizedFile);
+      });
+    } else if (typeof imageValue === "string") {
       setImagePreview(imageValue);
+      setImageError(null);
     }
-  }, [imageValue]);
+  }, [imageValue, form]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      form.setValue("image_url", files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      form.setValue("image_url", files[0]);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    form.setValue("image_url", null);
+    setImagePreview(null);
+    setImageError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleEditImage = () => {
+    if (imagePreview) {
+      setImageToEdit(imagePreview);
+      setIsEditorOpen(true);
+    }
+  };
+
+  const handleSaveEditedImage = (croppedImage: Blob) => {
+    // Convertir le Blob en File
+    const file = new File([croppedImage], "edited-image.png", {
+      type: "image/png",
+    });
+    form.setValue("image_url", file);
+    setImageToEdit(null);
+  };
 
   return (
     <Form {...form}>
@@ -87,7 +289,11 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Description du produit" {...field} value={field.value ?? ''} />
+                    <Textarea
+                      placeholder="Description du produit"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -97,35 +303,49 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
               control={form.control}
               name="price"
               render={({ field }) => (
-                  <FormItem>
+                <FormItem>
                   <FormLabel>Prix</FormLabel>
                   <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
-                  </FormItem>
+                </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="utilityCategoryId"
+              name="company"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Catégorie d'utilité</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez une catégorie" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {utilityCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Entreprise <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <SearchableSelect
+                      value={field.value ?? undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Réinitialiser la marque si l'entreprise change
+                        form.setValue("brandId", null);
+                      }}
+                      options={[
+                        { value: "CleanExpress", label: "CleanExpress" },
+                        { value: "Lumina Distribution", label: "Lumina Distribution" },
+                      ]}
+                      placeholder="Sélectionnez une entreprise"
+                      searchPlaceholder="Rechercher une entreprise..."
+                      emptyText="Aucune entreprise trouvée."
+                      disabled={!!defaultCompany}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {defaultCompany 
+                      ? `Entreprise sélectionnée : ${defaultCompany}`
+                      : "Sélectionnez l'entreprise propriétaire de ce produit"}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -136,49 +356,242 @@ const ProductForm = ({ initialData, onSubmit, isSaving }: ProductFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Marque</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez une marque" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <SearchableSelect
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      options={availableBrands.map((brand) => ({
+                        value: brand.id,
+                        label: brand.name,
+                      }))}
+                      placeholder={
+                        selectedCompany 
+                          ? `Sélectionnez une marque ${selectedCompany === "Lumina Distribution" ? "(Force Xpress uniquement)" : "(toutes sauf Force Xpress)"}`
+                          : "Sélectionnez d'abord une entreprise"
+                      }
+                      searchPlaceholder="Rechercher une marque..."
+                      emptyText={
+                        selectedCompany
+                          ? `Aucune marque disponible pour ${selectedCompany}`
+                          : "Sélectionnez d'abord une entreprise"
+                      }
+                      disabled={!selectedCompany}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {selectedCompany === "Lumina Distribution" 
+                      ? "Marques disponibles : Force Xpress uniquement"
+                      : selectedCompany === "CleanExpress"
+                      ? "Marques disponibles : toutes les marques sauf Force Xpress"
+                      : "Sélectionnez d'abord une entreprise pour voir les marques disponibles"}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="image_url"
+              name="utilityCategoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image</FormLabel>
+                  <FormLabel>Catégorie d'utilité</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        field.onChange(e.target.files?.[0] || null);
-                      }}
+                    <SearchableSelect
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      options={utilityCategories.map((cat) => ({
+                        value: cat.id,
+                        label: cat.name,
+                        color: cat.color,
+                      }))}
+                      placeholder="Sélectionnez une catégorie"
+                      searchPlaceholder="Rechercher une catégorie..."
+                      emptyText="Aucune catégorie trouvée."
                     />
                   </FormControl>
                   <FormMessage />
-                  {imagePreview && <img src={imagePreview} alt="Aperçu" className="mt-4 w-32 h-32 object-cover rounded-md border" />}
                 </FormItem>
               )}
             />
+            {/* Section Photo du Produit */}
+            <Card className="border-2 border-dashed">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Photo du Produit
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="image_url"
+                  render={() => (
+                    <FormItem>
+                      {/* Zone de drag & drop / Preview */}
+                      <div
+                        className={cn(
+                          "relative rounded-lg border-2 border-dashed transition-all",
+                          isDragging && "border-primary bg-primary/5 scale-105",
+                          !isDragging && "border-muted-foreground/25",
+                          imagePreview && "border-solid",
+                        )}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                      >
+                        {imagePreview ? (
+                          // Preview de l'image
+                          <div className="relative group">
+                            <img
+                              src={imagePreview}
+                              alt="Aperçu"
+                              className="w-full h-auto rounded-lg object-cover max-h-[400px]"
+                            />
+                            {/* Overlay au hover */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={handleEditImage}
+                                className="gap-2"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                                Éditer
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={openFilePicker}
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleRemoveImage}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {/* Badge de confirmation */}
+                            <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
+                              <Check className="h-4 w-4" />
+                            </div>
+                          </div>
+                        ) : (
+                          // Zone de drop
+                          <div
+                            className="flex flex-col items-center justify-center py-16 px-4 cursor-pointer"
+                            onClick={openFilePicker}
+                          >
+                            <div
+                              className={cn(
+                                "rounded-full p-4 mb-4 transition-colors",
+                                isDragging ? "bg-primary/20" : "bg-muted",
+                              )}
+                            >
+                              <Upload
+                                className={cn(
+                                  "h-8 w-8 transition-colors",
+                                  isDragging
+                                    ? "text-primary"
+                                    : "text-muted-foreground",
+                                )}
+                              />
+                            </div>
+                            <p className="text-sm font-medium mb-1">
+                              {isDragging
+                                ? "Déposez l'image ici"
+                                : "Glissez-déposez une image"}
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-4">
+                              ou cliquez pour parcourir
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              JPEG, PNG, WebP (max 5MB)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Input file caché */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+
+                      {/* Message d'erreur */}
+                      {imageError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{imageError}</AlertDescription>
+                        </Alert>
+                      )}
+
+                      <FormDescription>
+                        Recommandé : 800x800px, format JPEG, moins de 200KB pour
+                        de meilleures performances
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Conseils rapides */}
+                <div className="rounded-lg bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/10 p-4 space-y-2">
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <span className="text-lg">✨</span>
+                    Conseils pour une belle photo
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>
+                        Les images sont automatiquement redimensionnées à
+                        1000×1000px
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>
+                        Utilisez l'éditeur pour zoomer et centrer le produit
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>
+                        Appliquez un fond blanc pour un rendu professionnel
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>Produit bien éclairé et net</span>
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
         <Button type="submit" disabled={isSaving}>
           {isSaving ? "Enregistrement..." : "Enregistrer"}
         </Button>
+
+        {/* Éditeur d'images */}
+        {imageToEdit && (
+          <ImageEditor
+            open={isEditorOpen}
+            onOpenChange={setIsEditorOpen}
+            imageSrc={imageToEdit}
+            onSave={handleSaveEditedImage}
+          />
+        )}
       </form>
     </Form>
   );

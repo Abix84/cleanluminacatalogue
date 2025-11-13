@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { useProducts } from "@/context/ProductContext";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
+import { useProducts } from "@/context/ProductContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
 import { formatPrice } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -36,6 +36,18 @@ const ProductDetail = () => {
 
   const category = product?.utilityCategoryId ? getUtilityCategoryById(product.utilityCategoryId) : null;
   const brand = product?.brandId ? getBrandById(product.brandId) : null;
+
+  // Déterminer l'URL de retour selon l'entreprise du produit
+  const getBackUrl = () => {
+    if (!product?.company) return "/";
+    if (product.company === "Lumina Distribution") {
+      return "/catalogue/lumina-distribution";
+    }
+    if (product.company === "CleanExpress") {
+      return "/catalogue/cleanexpress";
+    }
+    return "/";
+  };
 
   const handleImageClick = () => {
     if (product?.image_url) {
@@ -71,7 +83,7 @@ const ProductDetail = () => {
         <h2 className="mt-4 text-2xl font-bold">Produit non trouvé</h2>
         <p className="mt-2 text-muted-foreground">Le produit que vous cherchez n'existe pas.</p>
         <Button asChild className="mt-6">
-          <Link to="/">
+          <Link to={getBackUrl()}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour au catalogue
           </Link>
         </Button>
@@ -84,7 +96,7 @@ const ProductDetail = () => {
       <div className="container mx-auto py-8 px-4">
         <div className="mb-6">
           <Button asChild variant="outline" size="sm">
-            <Link to="/">
+            <Link to={getBackUrl()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour au catalogue
             </Link>

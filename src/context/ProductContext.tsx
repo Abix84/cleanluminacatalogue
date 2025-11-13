@@ -1,172 +1,276 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
-
-type ProductFormData = Omit<Product, 'id' | 'image_url'> & {
-  image_url?: File | string | null;
-};
-
-interface ProductContextType {
-  products: Product[];
-  addProduct: (product: ProductFormData) => Promise<void>;
-  updateProduct: (updatedProduct: Product, imageFile?: File) => Promise<void>;
-  deleteProduct: (productId: string) => Promise<void>;
-  getProductById: (productId: string) => Product | undefined;
-  loading: boolean;
-}
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import {
+  Product,
+  ProductFormData,
+  ProductContextType,
+  ApiError,
+} from "@/types";
+import { localStorageProducts, localStorageImages } from "@/lib/localStorage";
+import { toast } from "sonner";
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const BUCKET_NAME = 'product-images';
-
-// Helper to convert snake_case from DB to camelCase for frontend
-const toCamelCase = (product: any): Product => ({
-  ...product,
-  utilityCategoryId: product.utility_category_id,
-  brandId: product.brand_id,
-});
+// ==========================================
+// PROVIDER COMPONENT
+// ==========================================
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ApiError | null>(null);
 
+  /**
+   * Fetches all products from localStorage
+   */
   const fetchProducts = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from('products').select('*').order('name');
-    if (error) {
-      toast.error("Erreur lors de la récupération des produits.");
-      console.error(error);
-    } else {
-      setProducts((data || []).map(toCamelCase));
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await localStorageProducts.getAll();
+      setProducts(data.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la récupération des produits.";
+      const apiError: ApiError = {
+        message: errorMessage,
+        details: err,
+      };
+
+      setError(apiError);
+      toast.error(errorMessage);
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  const deleteImageByUrl = async (imageUrl: string) => {
-    if (!imageUrl || imageUrl.includes('placeholder.svg')) return;
+  /**
+   * Adds a new product to localStorage
+   */
+  const addProduct = async (productData: ProductFormData): Promise<void> => {
     try {
-      const { error } = await supabase.functions.invoke('delete-image', {
-        body: { imageUrl },
-      });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to delete old image:', error);
-    }
-  };
+      setError(null);
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const fileName = `${uuidv4()}-${file.name}`;
-    const { error } = await supabase.storage.from(BUCKET_NAME).upload(fileName, file);
-    if (error) {
-      toast.error("Erreur lors du téléversement de l'image.");
-      console.error(error);
-      return null;
-    }
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-    return data.publicUrl;
-  };
+      let imageUrl: string | null = null;
 
-  const addProduct = async (productData: ProductFormData) => {
-    let imageUrl: string | null = null;
-    if (productData.image_url instanceof File) {
-      imageUrl = await uploadImage(productData.image_url);
-    }
+      // Handle image upload if present
+      if (productData.image_url && productData.image_url instanceof File) {
+        const file = productData.image_url;
+        // Create a temporary product without image first
+        const tempProductData = {
+          name: productData.name,
+          description: productData.description,
+          price: productData.price,
+          image_url: null,
+          utilityCategoryId: productData.utilityCategoryId,
+          brandId: productData.brandId,
+        };
 
-    const { image_url: _, utilityCategoryId, brandId, ...rest } = productData;
-    const productToInsert = {
-      ...rest,
-      image_url: imageUrl,
-      utility_category_id: utilityCategoryId,
-      brand_id: brandId,
-    };
-    
-    const { data, error } = await supabase
-      .from('products')
-      .insert([productToInsert])
-      .select()
-      .single();
+        const newProduct = await localStorageProducts.create(tempProductData);
 
-    if (error) {
-      toast.error("Erreur lors de l'ajout du produit.");
-      console.error(error);
-    } else if (data) {
-      const newProduct = toCamelCase(data);
-      setProducts(prev => [...prev, newProduct].sort((a, b) => a.name.localeCompare(b.name)));
-    }
-  };
+        // Now upload the image with the product ID
+        imageUrl = await localStorageImages.upload(file, newProduct.id);
 
-  const updateProduct = async (updatedProductData: Product, imageFile?: File) => {
-    let imageUrl = updatedProductData.image_url;
+        // Update the product with the image URL
+        const updatedProduct = await localStorageProducts.update(
+          newProduct.id,
+          {
+            ...newProduct,
+            image_url: imageUrl,
+          },
+        );
 
-    if (imageFile) {
-      const originalProduct = products.find(p => p.id === updatedProductData.id);
-      if (originalProduct && originalProduct.image_url) {
-        await deleteImageByUrl(originalProduct.image_url);
+        // Add the updated product (with image) to state
+        setProducts((prev) =>
+          [...prev, updatedProduct].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          ),
+        );
+        toast.success("Produit ajouté avec succès !");
+      } else {
+        // No image, create product directly
+        const newProduct = await localStorageProducts.create({
+          name: productData.name,
+          description: productData.description,
+          price: productData.price,
+          image_url: null,
+          utilityCategoryId: productData.utilityCategoryId,
+          brandId: productData.brandId,
+        });
+
+        setProducts((prev) =>
+          [...prev, newProduct].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        toast.success("Produit ajouté avec succès !");
       }
-      imageUrl = await uploadImage(imageFile);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de l'ajout du produit.";
+      const apiError: ApiError = {
+        message: errorMessage,
+        details: err,
+      };
+
+      setError(apiError);
+      toast.error(errorMessage);
+      console.error("Error adding product:", err);
+      throw err;
     }
+  };
 
-    const { utilityCategoryId, brandId, ...rest } = updatedProductData;
-    const productToUpdate = {
-      ...rest,
-      image_url: imageUrl,
-      utility_category_id: utilityCategoryId,
-      brand_id: brandId,
-    };
+  /**
+   * Updates an existing product in localStorage
+   */
+  const updateProduct = async (
+    updatedProduct: Product,
+    imageFile?: File,
+  ): Promise<void> => {
+    try {
+      setError(null);
 
-    const { data, error } = await supabase
-      .from('products')
-      .update(productToUpdate)
-      .eq('id', productToUpdate.id)
-      .select()
-      .single();
+      let imageUrl = updatedProduct.image_url;
 
-    if (error) {
-      toast.error("Erreur lors de la mise à jour du produit.");
-      console.error(error);
-    } else if (data) {
-      const updatedProduct = toCamelCase(data);
-      setProducts(prev =>
-        prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p)).sort((a, b) => a.name.localeCompare(b.name))
+      // Handle image upload if a new file is provided
+      if (imageFile) {
+        // Delete old image if exists
+        if (updatedProduct.image_url) {
+          try {
+            await localStorageImages.delete(updatedProduct.image_url);
+          } catch (err) {
+            console.warn("Could not delete old image:", err);
+          }
+        }
+
+        // Upload new image
+        imageUrl = await localStorageImages.upload(
+          imageFile,
+          updatedProduct.id,
+        );
+      }
+
+      // Update product
+      const productToUpdate = {
+        ...updatedProduct,
+        image_url: imageUrl,
+      };
+
+      await localStorageProducts.update(updatedProduct.id, productToUpdate);
+
+      setProducts((prev) =>
+        prev
+          .map((p) => (p.id === updatedProduct.id ? productToUpdate : p))
+          .sort((a, b) => a.name.localeCompare(b.name)),
       );
+      toast.success("Produit mis à jour avec succès !");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la mise à jour du produit.";
+      const apiError: ApiError = {
+        message: errorMessage,
+        details: err,
+      };
+
+      setError(apiError);
+      toast.error(errorMessage);
+      console.error("Error updating product:", err);
+      throw err;
     }
   };
 
-  const deleteProduct = async (productId: string) => {
-    const productToDelete = products.find(p => p.id === productId);
-    if (productToDelete && productToDelete.image_url) {
-      await deleteImageByUrl(productToDelete.image_url);
-    }
+  /**
+   * Deletes a product from localStorage
+   */
+  const deleteProduct = async (productId: string): Promise<void> => {
+    try {
+      setError(null);
 
-    const { error } = await supabase.from('products').delete().eq('id', productId);
-    if (error) {
-      toast.error("Erreur lors de la suppression du produit.");
-    } else {
-      setProducts(prev => prev.filter(p => p.id !== productId));
+      // Find product to get image URL
+      const product = products.find((p) => p.id === productId);
+
+      // Delete image if exists
+      if (product?.image_url) {
+        try {
+          await localStorageImages.delete(product.image_url);
+        } catch (err) {
+          console.warn("Could not delete product image:", err);
+        }
+      }
+
+      // Delete product
+      await localStorageProducts.delete(productId);
+
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      toast.success("Produit supprimé avec succès !");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la suppression du produit.";
+      const apiError: ApiError = {
+        message: errorMessage,
+        details: err,
+      };
+
+      setError(apiError);
+      toast.error(errorMessage);
+      console.error("Error deleting product:", err);
+      throw err;
     }
   };
 
-  const getProductById = (productId: string) => {
-    return products.find(p => p.id === productId);
+  /**
+   * Gets a product by its ID
+   */
+  const getProductById = (productId: string): Product | undefined => {
+    return products.find((p) => p.id === productId);
+  };
+
+  const value: ProductContextType = {
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    getProductById,
+    loading,
+    error,
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct, getProductById, loading }}>
-      {children}
-    </ProductContext.Provider>
+    <ProductContext.Provider value={value}>{children}</ProductContext.Provider>
   );
 };
 
-export const useProducts = () => {
+// ==========================================
+// HOOK
+// ==========================================
+
+/**
+ * Hook to use the ProductContext
+ * @throws {Error} if used outside of ProductProvider
+ */
+export const useProducts = (): ProductContextType => {
   const context = useContext(ProductContext);
+
   if (context === undefined) {
-    throw new Error('useProducts must be used within a ProductProvider');
+    throw new Error("useProducts must be used within a ProductProvider");
   }
+
   return context;
 };

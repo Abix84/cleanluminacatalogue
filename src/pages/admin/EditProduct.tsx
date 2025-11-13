@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ProductForm from "@/components/admin/ProductForm";
-import { useProducts } from "@/context/ProductContext";
+import { useProducts } from "@/context/ProductContextUnified";
+import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -10,9 +13,24 @@ const EditProduct = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getProductById, updateProduct } = useProducts();
+  const { isAdmin } = useAuth();
+  const isOfflineMode = import.meta.env.VITE_OFFLINE_MODE === "true";
   const [isSaving, setIsSaving] = useState(false);
 
   const product = id ? getProductById(id) : undefined;
+
+  // Vérifier les permissions
+  if (!isOfflineMode && !isAdmin) {
+    return (
+      <Alert variant="destructive" className="max-w-md">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Accès refusé</AlertTitle>
+        <AlertDescription>
+          Seuls les administrateurs peuvent modifier des produits.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   const handleSubmit = async (data: any) => {
     if (!product) return;
@@ -48,7 +66,12 @@ const EditProduct = () => {
         </Link>
       </Button>
       <h1 className="text-2xl font-bold mb-4">Modifier le produit</h1>
-      <ProductForm initialData={product} onSubmit={handleSubmit} isSaving={isSaving} />
+      <ProductForm 
+        initialData={product} 
+        onSubmit={handleSubmit} 
+        isSaving={isSaving}
+        defaultCompany={product.company || undefined}
+      />
     </div>
   );
 };
