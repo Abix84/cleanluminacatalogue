@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductList from "@/components/ProductList";
+import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,15 +15,12 @@ import { useCompanyTheme } from "@/hooks/useCompanyTheme";
 import { useContact } from "@/context/ContactContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { SearchWithSuggestions } from "@/components/SearchWithSuggestions";
+import { ProductFilters } from "@/types";
 import {
   Search,
   Sparkles,
-  TrendingUp,
   Shield,
   Zap,
-  Package,
-  Grid3x3,
-  CheckCircle,
   Menu,
   X,
   ChevronLeft,
@@ -30,6 +28,8 @@ import {
   MoreVertical,
   Home,
   LayoutGrid,
+  SlidersHorizontal,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +49,8 @@ const Index = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState("");
+  const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({});
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   // Filtrer les produits par entreprise
   const products = useMemo(() => {
@@ -93,13 +95,36 @@ const Index = () => {
     return brands;
   }, [brands, company]);
 
-  // Stats
-  const stats = {
-    totalProducts: products.length,
-    totalBrands: availableBrands.length,
-    totalCategories: utilityCategories.length,
-    productsWithImages: products.filter((p) => p.image_url).length,
-  };
+  // Calculer le nombre de produits filtrés pour les filtres avancés
+  const filteredProductsCount = useMemo(() => {
+    let filtered = products;
+    
+    // Appliquer les filtres avancés
+    if (advancedFilters.categoryId) {
+      filtered = filtered.filter(p => p.utilityCategoryId === advancedFilters.categoryId);
+    }
+    if (advancedFilters.brandId) {
+      filtered = filtered.filter(p => p.brandId === advancedFilters.brandId);
+    }
+    if (advancedFilters.minPrice !== undefined) {
+      filtered = filtered.filter(p => p.price >= advancedFilters.minPrice!);
+    }
+    if (advancedFilters.maxPrice !== undefined) {
+      filtered = filtered.filter(p => p.price <= advancedFilters.maxPrice!);
+    }
+    if (debouncedSearchQuery) {
+      const searchLower = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    if (selectedCategory) {
+      filtered = filtered.filter(p => p.utilityCategoryId === selectedCategory);
+    }
+    
+    return filtered.length;
+  }, [products, advancedFilters, debouncedSearchQuery, selectedCategory]);
 
   // Filtrer les catégories selon la recherche dans la sidebar
   const filteredCategories = utilityCategories.filter((cat) =>
@@ -177,21 +202,6 @@ const Index = () => {
               </motion.div>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="hidden md:flex items-center gap-2"
-            >
-              <Badge variant="secondary" className="gap-1.5 px-3 py-1.5">
-                <Package className="h-3.5 w-3.5" />
-                {stats.totalProducts} produits
-              </Badge>
-              <Badge variant="secondary" className="gap-1.5 px-3 py-1.5">
-                <Grid3x3 className="h-3.5 w-3.5" />
-                {stats.totalCategories} catégories
-              </Badge>
-            </motion.div>
           </motion.div>
         </div>
 
@@ -229,7 +239,7 @@ const Index = () => {
         </Button>
 
         <div className="container mx-auto px-4">
-          <div className="flex gap-6 py-6">
+          <div className="flex gap-4 py-4">
             {/* Modern Sidebar */}
             <motion.aside
               initial={{ x: -20, opacity: 0 }}
@@ -241,7 +251,7 @@ const Index = () => {
                 "fixed lg:sticky top-4 left-4 sm:top-6 sm:left-6 lg:left-0 z-40",
                 "bg-background/95 backdrop-blur-xl border rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/5",
                 "overflow-hidden transition-all duration-300",
-                isCollapsed ? "w-16 sm:w-20" : "w-[calc(100vw-2rem)] sm:w-72 lg:w-80 max-w-[90vw] sm:max-w-none",
+                isCollapsed ? "w-16 sm:w-20" : "w-[calc(100vw-2rem)] sm:w-64 lg:w-72 max-w-[90vw] sm:max-w-none",
                 "h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)] lg:h-[calc(100vh-5rem)]",
                 !isSidebarOpen && !isMobileSidebarOpen && "lg:hidden translate-x-[-120%] lg:translate-x-0",
               )}
@@ -262,7 +272,7 @@ const Index = () => {
                         <div>
                           <h2 className="text-lg font-bold">Navigation</h2>
                           <p className="text-xs text-muted-foreground">
-                            {stats.totalCategories} catégories
+                            {utilityCategories.length} catégories
                           </p>
                         </div>
                       </motion.div>
@@ -513,99 +523,82 @@ const Index = () => {
 
             {/* Main Content */}
             <main className="flex-1 min-w-0">
-              {/* Quick Stats */}
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"
-              >
-                {[
-                  {
-                    icon: Package,
-                    label: "Produits",
-                    value: stats.totalProducts,
-                    color: "text-blue-500",
-                    bg: "bg-blue-500/10",
-                  },
-                  {
-                    icon: Grid3x3,
-                    label: "Catégories",
-                    value: stats.totalCategories,
-                    color: "text-green-500",
-                    bg: "bg-green-500/10",
-                  },
-                  {
-                    icon: TrendingUp,
-                    label: "Marques",
-                    value: stats.totalBrands,
-                    color: "text-purple-500",
-                    bg: "bg-purple-500/10",
-                  },
-                  {
-                    icon: CheckCircle,
-                    label: "Avec Photos",
-                    value: stats.productsWithImages,
-                    color: "text-orange-500",
-                    bg: "bg-orange-500/10",
-                  },
-                ].map((stat, index) => (
-                  <motion.div key={index} variants={itemVariants}>
-                    <Card className="border-muted hover:border-primary/50 transition-all hover:shadow-md rounded-2xl">
-                      <CardContent className="p-4">
-                        <div
-                          className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-                            stat.bg,
-                          )}
-                        >
-                          <stat.icon className={cn("h-5 w-5", stat.color)} />
-                        </div>
-                        <div className="text-2xl font-bold mb-1">
-                          {stat.value}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {stat.label}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* Search Bar with Suggestions */}
+              {/* Barre de navigation avec recherche et filtres */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
+                className="sticky top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-4 -mx-4 px-4 py-3"
               >
-                <SearchWithSuggestions
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Rechercher un produit, une marque..."
-                  showHistory={true}
-                  showSuggestions={true}
-                />
+                <div className="flex flex-col gap-4">
+                  {/* Ligne 1: Recherche et bouton filtres */}
+                  <div className="flex gap-3 items-center">
+                    <div className="flex-1">
+                      <SearchWithSuggestions
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder="Rechercher un produit, une marque..."
+                        showHistory={true}
+                        showSuggestions={true}
+                      />
+                    </div>
+                    <Button
+                      variant={isFiltersOpen ? "default" : "outline"}
+                      onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                      className="gap-2 flex-shrink-0"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span className="hidden sm:inline">Filtres</span>
+                      {(advancedFilters.categoryId || advancedFilters.brandId || advancedFilters.minPrice || advancedFilters.maxPrice) && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {[
+                            advancedFilters.categoryId && 1,
+                            advancedFilters.brandId && 1,
+                            (advancedFilters.minPrice || advancedFilters.maxPrice) && 1,
+                          ].filter(Boolean).length}
+                        </Badge>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Ligne 2: Filtres avancés (collapsible) */}
+                  <AnimatePresence>
+                    {isFiltersOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <AdvancedFilters
+                          filters={advancedFilters}
+                          onFiltersChange={setAdvancedFilters}
+                          productsCount={filteredProductsCount}
+                          disableCollapsible={true}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </motion.div>
 
-              {/* Products Header */}
-              <div className="mb-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3">
+              {/* Products Header - Compact */}
+              <div className="mb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2">
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 break-words">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold break-words">
                       {selectedCategory
                         ? utilityCategories.find(
                             (c) => c.id === selectedCategory,
                           )?.name
                         : "Notre Catalogue"}
                     </h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                    <p className="text-xs text-muted-foreground break-words mt-0.5">
                       {selectedCategory
-                        ? `${products.filter((p) => p.utilityCategoryId === selectedCategory).length} produits dans cette catégorie`
+                        ? `${products.filter((p) => p.utilityCategoryId === selectedCategory).length} produit${products.filter((p) => p.utilityCategoryId === selectedCategory).length > 1 ? "s" : ""}`
                         : debouncedSearchQuery
-                          ? `Résultats pour "${debouncedSearchQuery}"`
-                          : `${products.length} produits disponibles`}
+                          ? `${filteredProductsCount} résultat${filteredProductsCount > 1 ? "s" : ""} pour "${debouncedSearchQuery}"`
+                          : `${filteredProductsCount} produit${filteredProductsCount > 1 ? "s" : ""} disponible${filteredProductsCount > 1 ? "s" : ""}`}
                     </p>
                   </div>
 
@@ -663,6 +656,9 @@ const Index = () => {
                     searchQuery={debouncedSearchQuery}
                     categoryFilter={selectedCategory}
                     products={products}
+                    advancedFilters={advancedFilters}
+                    onAdvancedFiltersChange={setAdvancedFilters}
+                    hideFilters={true}
                   />
                 </motion.div>
               </section>

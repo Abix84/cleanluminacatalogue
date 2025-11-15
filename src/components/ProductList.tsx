@@ -39,6 +39,8 @@ interface ProductListProps {
   categoryFilter?: string | null;
   hideFilters?: boolean;
   products?: Product[]; // Produits pré-filtrés (optionnel)
+  advancedFilters?: ProductFilters; // Filtres avancés depuis le parent
+  onAdvancedFiltersChange?: (filters: ProductFilters) => void; // Callback pour mettre à jour les filtres
 }
 
 const ProductList = ({
@@ -46,6 +48,8 @@ const ProductList = ({
   categoryFilter = null,
   hideFilters = false,
   products: providedProducts,
+  advancedFilters: externalAdvancedFilters,
+  onAdvancedFiltersChange,
 }: ProductListProps) => {
   const { products: contextProducts } = useProducts();
   // Utiliser les produits fournis en prop, sinon utiliser ceux du contexte
@@ -60,8 +64,12 @@ const ProductList = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({});
+  const [internalAdvancedFilters, setInternalAdvancedFilters] = useState<ProductFilters>({});
   const itemsPerPage = 20; // Nombre d'items par page
+
+  // Utiliser les filtres externes si fournis, sinon utiliser les filtres internes
+  const advancedFilters = externalAdvancedFilters ?? internalAdvancedFilters;
+  const setAdvancedFilters = onAdvancedFiltersChange ?? setInternalAdvancedFilters;
 
   // Use external filters if provided, otherwise use local state
   const effectiveSearchTerm = searchQuery || localSearchTerm || advancedFilters.searchTerm || "";
@@ -200,8 +208,8 @@ const ProductList = ({
 
   return (
     <>
-      {/* Advanced Filters - Hidden if hideFilters is true */}
-      {!hideFilters && (
+      {/* Advanced Filters - Hidden if hideFilters is true or if filters are managed externally */}
+      {!hideFilters && !externalAdvancedFilters && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -348,7 +356,7 @@ const ProductList = ({
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
-                        className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"
+                        className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-4"
                       >
                 {paginatedProducts.map((product, index) => (
                   <ProductCard
