@@ -24,6 +24,7 @@ const AddProduct = () => {
   const isOfflineMode = import.meta.env.VITE_OFFLINE_MODE === "true";
   const [selectedCompany, setSelectedCompany] = useState<"CleanExpress" | "Lumina Distribution" | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [formKey, setFormKey] = useState(0); // Clé pour forcer la réinitialisation du formulaire
 
   // Vérifier les permissions
   if (!isOfflineMode && !isAdmin) {
@@ -39,11 +40,17 @@ const AddProduct = () => {
   }
 
   const handleSubmit = async (data: ProductFormData) => {
-    setIsSaving(true);
-    await addProduct(data);
-    setIsSaving(false);
-    toast.success("Produit ajouté avec succès !");
-    navigate("/admin");
+    try {
+      setIsSaving(true);
+      await addProduct(data);
+      setIsSaving(false);
+      // Le toast.success est déjà affiché dans addProduct
+      // Réinitialiser le formulaire en changeant la clé pour permettre l'ajout d'un autre produit
+      setFormKey(prev => prev + 1);
+    } catch (error) {
+      setIsSaving(false);
+      // L'erreur est déjà gérée dans addProduct avec toast.error
+    }
   };
 
   // Si aucune entreprise n'est sélectionnée, afficher la sélection
@@ -120,10 +127,19 @@ const AddProduct = () => {
         </Button>
       </div>
       <ProductForm 
+        key={formKey} // Réinitialise le formulaire quand la clé change
         onSubmit={handleSubmit} 
         isSaving={isSaving}
         defaultCompany={selectedCompany}
       />
+      <div className="flex gap-2 mt-4">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/admin")}
+        >
+          Retour à l'administration
+        </Button>
+      </div>
     </div>
   );
 };
