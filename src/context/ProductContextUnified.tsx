@@ -104,13 +104,40 @@ const offlineDeleteProduct = async (
 // ONLINE FUNCTIONS (SUPABASE)
 // ==========================================
 
+/**
+ * Nettoie le nom de fichier pour Supabase Storage
+ * Remplace les espaces et caractères spéciaux par des tirets
+ */
+const sanitizeFileName = (fileName: string): string => {
+  // Récupérer l'extension
+  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+  // Récupérer le nom sans extension
+  const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+  
+  // Normaliser les caractères accentués (é -> e, etc.)
+  const normalized = nameWithoutExt
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  
+  // Remplacer les espaces et caractères spéciaux par des tirets
+  // Garder seulement les caractères alphanumériques, tirets et underscores
+  const sanitized = normalized
+    .replace(/[^a-zA-Z0-9_-]/g, '-')
+    .replace(/-+/g, '-') // Remplacer les tirets multiples par un seul
+    .replace(/^-|-$/g, ''); // Supprimer les tirets en début et fin
+  
+  return `${sanitized}.${extension}`;
+};
+
 const onlineAddProduct = async (
   productData: ProductFormData,
 ): Promise<Product> => {
   let imageUrl: string | null = null;
 
   if (productData.image_url instanceof File) {
-    const fileName = `${uuidv4()}-${productData.image_url.name}`;
+    // Nettoyer le nom du fichier pour éviter les erreurs "Invalid key"
+    const sanitizedOriginalName = sanitizeFileName(productData.image_url.name);
+    const fileName = `${uuidv4()}-${sanitizedOriginalName}`;
     const { error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, productData.image_url);
@@ -160,7 +187,9 @@ const onlineUpdateProduct = async (
   const oldImageUrl = updatedProductData.image_url;
 
   if (imageFile) {
-    const fileName = `${uuidv4()}-${imageFile.name}`;
+    // Nettoyer le nom du fichier pour éviter les erreurs "Invalid key"
+    const sanitizedOriginalName = sanitizeFileName(imageFile.name);
+    const fileName = `${uuidv4()}-${sanitizedOriginalName}`;
     const { error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, imageFile);
