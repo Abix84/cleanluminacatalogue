@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Product } from "@/types";
 import {
@@ -28,8 +28,10 @@ import {
   CheckCircle,
   ExternalLink,
   ImageIcon,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface ProductCardProps {
   product: Product;
@@ -39,7 +41,7 @@ interface ProductCardProps {
   index?: number;
 }
 
-const ProductCard = ({
+const ProductCard = memo(({
   product,
   onImageClick,
   isNew = false,
@@ -48,27 +50,43 @@ const ProductCard = ({
 }: ProductCardProps) => {
   const { getUtilityCategoryById } = useUtilityCategories();
   const { getBrandById } = useBrands();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [isHovered, setIsHovered] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  
+  const isProductFavorite = isFavorite(product.id);
 
+  // Calcul direct - pas besoin de useMemo car le calcul est rapide
   const category = product.utilityCategoryId
     ? getUtilityCategoryById(product.utilityCategoryId)
     : null;
   const brand = product.brandId ? getBrandById(product.brandId) : null;
 
-  const handleImageClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (product.image_url) {
-      onImageClick(product.image_url);
-    }
-  };
+  const handleImageClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (product.image_url) {
+        onImageClick(product.image_url);
+      }
+    },
+    [product.image_url, onImageClick]
+  );
 
-  const handleQuickView = (e: React.MouseEvent) => {
+  const handleQuickView = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsQuickViewOpen(true);
-  };
+  }, []);
+
+  const handleFavoriteToggle = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorite(product.id);
+    },
+    [product.id, toggleFavorite]
+  );
 
   // Animation variants
   const cardVariants = {
@@ -117,9 +135,10 @@ const ProductCard = ({
                 <motion.img
                   src={product.image_url || "/placeholder.svg"}
                   alt={product.name}
-                  className="w-full h-full object-contain transition-all duration-500"
+                  className="w-full h-full object-contain transition-all duration-500 p-4"
+                  loading="lazy"
                   animate={{
-                    scale: isHovered ? 1.1 : 1,
+                    scale: isHovered ? 1.05 : 1,
                   }}
                 />
 
@@ -130,13 +149,13 @@ const ProductCard = ({
                   </div>
                 )}
 
-                {/* Overlay on Hover */}
+                {/* Overlay on Hover - Simplified */}
                 {isHovered && (
                   <motion.div
                     variants={overlayVariants}
                     initial="hidden"
                     animate="visible"
-                    className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 z-10"
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2 z-10"
                   >
                     <Button
                       size="sm"
@@ -161,46 +180,45 @@ const ProductCard = ({
                   </motion.div>
                 )}
 
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
+                {/* Badges - Smaller and less intrusive */}
+                <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
                   {isNew && (
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-lg">
-                      <Sparkles className="h-3 w-3 mr-1" />
+                    <Badge className="text-[10px] px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-md">
+                      <Sparkles className="h-2.5 w-2.5 mr-0.5" />
                       Nouveau
                     </Badge>
                   )}
                   {isFeatured && (
-                    <Badge className="bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-lg">
-                      <Sparkles className="h-3 w-3 mr-1" />
+                    <Badge className="text-[10px] px-1.5 py-0.5 bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-md">
+                      <Sparkles className="h-2.5 w-2.5 mr-0.5" />
                       Populaire
                     </Badge>
                   )}
                 </div>
 
-                {/* Category Badge */}
-                {category && (
-                  <Badge
-                    className="absolute top-3 right-3 shadow-lg backdrop-blur-sm z-20"
-                    style={{
-                      backgroundColor: `${category.color}dd`,
-                      color: "#fff",
-                      border: "none",
-                    }}
-                  >
-                    {category.name}
-                  </Badge>
-                )}
-
-                {/* Available Badge */}
-                <div className="absolute bottom-3 left-3 z-20">
-                  <Badge
+                {/* Bouton Favoris */}
+                <div className="absolute top-2 right-2 z-20">
+                  <Button
+                    size="icon"
                     variant="secondary"
-                    className="bg-white/90 backdrop-blur-sm gap-1 shadow-lg"
+                    className={cn(
+                      "h-9 w-9 rounded-full shadow-lg transition-all",
+                      isProductFavorite
+                        ? "bg-red-500 hover:bg-red-600 text-white"
+                        : "bg-white/90 hover:bg-white text-gray-700 backdrop-blur-sm"
+                    )}
+                    onClick={handleFavoriteToggle}
+                    aria-label={isProductFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                   >
-                    <CheckCircle className="h-3 w-3 text-green-500" />
-                    <span className="text-xs">Disponible</span>
-                  </Badge>
+                    <Heart
+                      className={cn(
+                        "h-4 w-4 transition-all",
+                        isProductFavorite && "fill-current"
+                      )}
+                    />
+                  </Button>
                 </div>
+
               </AspectRatio>
             </CardHeader>
 
@@ -218,24 +236,40 @@ const ProductCard = ({
                 {product.name}
               </h3>
 
-              {/* Description */}
-              {product.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                  {product.description}
-                </p>
+              {/* Category Badge */}
+              {category && (
+                <Badge
+                  className="mb-3 text-xs"
+                  style={{
+                    backgroundColor: category.color,
+                    color: "#fff",
+                    border: "none",
+                  }}
+                >
+                  {category.name}
+                </Badge>
               )}
 
               {/* Separator */}
               <Separator className="my-3" />
 
-              {/* Price */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
+              {/* Price and Availability */}
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600 truncate">
                     {formatPrice(product.price)}
                   </div>
                   <p className="text-xs text-muted-foreground">Prix unitaire</p>
                 </div>
+                {/* Available Badge - Moved here from image */}
+                <Badge
+                  variant="secondary"
+                  className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 gap-1 flex-shrink-0"
+                >
+                  <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
+                  <span className="text-xs text-green-700 dark:text-green-300 hidden xs:inline">Disponible</span>
+                  <span className="text-xs text-green-700 dark:text-green-300 xs:hidden">OK</span>
+                </Badge>
               </div>
             </CardContent>
 
@@ -270,6 +304,7 @@ const ProductCard = ({
                   src={product.image_url}
                   alt={product.name}
                   className="w-full h-full object-contain"
+                  loading="lazy"
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -339,6 +374,8 @@ const ProductCard = ({
       </Dialog>
     </>
   );
-};
+});
+
+ProductCard.displayName = "ProductCard";
 
 export default ProductCard;

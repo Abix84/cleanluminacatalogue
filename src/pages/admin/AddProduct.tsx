@@ -59,7 +59,7 @@ const AddProduct = () => {
 
         <div className="grid gap-4 md:grid-cols-2 max-w-2xl">
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col h-full"
             onClick={() => setSelectedCompany("CleanExpress")}
           >
             <CardHeader>
@@ -71,7 +71,7 @@ const AddProduct = () => {
                 Ajouter un produit pour CleanExpress
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button className="w-full" variant="outline">
                 Sélectionner
               </Button>
@@ -79,7 +79,7 @@ const AddProduct = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col h-full"
             onClick={() => setSelectedCompany("Lumina Distribution")}
           >
             <CardHeader>
@@ -91,7 +91,7 @@ const AddProduct = () => {
                 Ajouter un produit pour Lumina Distribution
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button className="w-full" variant="outline">
                 Sélectionner
               </Button>

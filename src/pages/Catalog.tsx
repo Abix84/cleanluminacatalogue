@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductList from "@/components/ProductList";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import { useProducts } from "@/context/ProductContextUnified";
 import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { useBrands } from "@/context/BrandContextUnified";
 import { useCompanyTheme } from "@/hooks/useCompanyTheme";
+import { useContact } from "@/context/ContactContext";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { SearchWithSuggestions } from "@/components/SearchWithSuggestions";
 import {
   Search,
   Sparkles,
@@ -32,11 +35,14 @@ import { cn } from "@/lib/utils";
 
 const Index = () => {
   const { brandName } = useParams<{ brandName?: string }>();
+  const navigate = useNavigate();
   const { products: allProducts } = useProducts();
   const { utilityCategories } = useUtilityCategories();
   const { brands } = useBrands();
   const { theme, company } = useCompanyTheme();
+  const { contactInfo } = useContact();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -211,13 +217,14 @@ const Index = () => {
         <Button
           variant="default"
           size="icon"
-          className="fixed bottom-6 right-6 z-50 lg:hidden shadow-2xl rounded-full w-14 h-14"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 lg:hidden shadow-2xl rounded-full w-12 h-12 sm:w-14 sm:h-14"
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          aria-label={isMobileSidebarOpen ? "Fermer le menu" : "Ouvrir le menu"}
         >
           {isMobileSidebarOpen ? (
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           ) : (
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
           )}
         </Button>
 
@@ -230,13 +237,13 @@ const Index = () => {
                 x: isSidebarOpen || isMobileSidebarOpen ? 0 : -20,
                 opacity: isSidebarOpen || isMobileSidebarOpen ? 1 : 0,
               }}
-              className={cn(
-                "fixed lg:sticky top-6 left-6 lg:left-0 z-40",
-                "bg-background/95 backdrop-blur-xl border rounded-3xl shadow-2xl shadow-black/5",
+                className={cn(
+                "fixed lg:sticky top-4 left-4 sm:top-6 sm:left-6 lg:left-0 z-40",
+                "bg-background/95 backdrop-blur-xl border rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/5",
                 "overflow-hidden transition-all duration-300",
-                isCollapsed ? "w-20" : "w-80",
-                "h-[calc(100vh-3rem)] lg:h-[calc(100vh-5rem)]",
-                !isSidebarOpen && !isMobileSidebarOpen && "lg:hidden",
+                isCollapsed ? "w-16 sm:w-20" : "w-[calc(100vw-2rem)] sm:w-72 lg:w-80 max-w-[90vw] sm:max-w-none",
+                "h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)] lg:h-[calc(100vh-5rem)]",
+                !isSidebarOpen && !isMobileSidebarOpen && "lg:hidden translate-x-[-120%] lg:translate-x-0",
               )}
             >
               <div className="flex flex-col h-full">
@@ -567,40 +574,37 @@ const Index = () => {
                 ))}
               </motion.div>
 
-              {/* Search Bar */}
+              {/* Search Bar with Suggestions */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-6"
               >
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Rechercher un produit, une marque..."
-                    className="pl-12 h-14 text-base rounded-2xl border-2 focus:border-primary shadow-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+                <SearchWithSuggestions
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Rechercher un produit, une marque..."
+                  showHistory={true}
+                  showSuggestions={true}
+                />
               </motion.div>
 
               {/* Products Header */}
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold mb-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 break-words">
                       {selectedCategory
                         ? utilityCategories.find(
                             (c) => c.id === selectedCategory,
                           )?.name
                         : "Notre Catalogue"}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground break-words">
                       {selectedCategory
                         ? `${products.filter((p) => p.utilityCategoryId === selectedCategory).length} produits dans cette catégorie`
-                        : searchQuery
-                          ? `Résultats pour "${searchQuery}"`
+                        : debouncedSearchQuery
+                          ? `Résultats pour "${debouncedSearchQuery}"`
                           : `${products.length} produits disponibles`}
                     </p>
                   </div>
@@ -610,7 +614,7 @@ const Index = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedCategory(null)}
-                      className="gap-2 rounded-xl"
+                      className="gap-2 rounded-xl w-full sm:w-auto flex-shrink-0"
                     >
                       <X className="h-4 w-4" />
                       Effacer
@@ -656,7 +660,7 @@ const Index = () => {
                   transition={{ delay: 0.2 }}
                 >
                   <ProductList
-                    searchQuery={searchQuery}
+                    searchQuery={debouncedSearchQuery}
                     categoryFilter={selectedCategory}
                     products={products}
                   />
@@ -689,6 +693,7 @@ const Index = () => {
               size="lg"
               variant="secondary"
               className="rounded-xl gap-2 shadow-xl font-semibold"
+              onClick={() => navigate("/contact")}
             >
               Nous Contacter
               <ChevronRight className="h-4 w-4" />

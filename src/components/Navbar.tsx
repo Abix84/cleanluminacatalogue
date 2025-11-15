@@ -6,7 +6,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useCompanyThemeCSS } from "@/hooks/useCompanyThemeCSS";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft, LogOut } from "lucide-react";
+import { Home, ArrowLeft, LogOut, LayoutDashboard, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -22,7 +22,7 @@ const Navbar = () => {
   const { theme: colorTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const { session, user } = useAuth();
+  const { session, user, isAdmin } = useAuth();
   const [isDark, setIsDark] = useState(false);
   
   // Appliquer les variables CSS du thème
@@ -94,48 +94,92 @@ const Navbar = () => {
           : `var(--company-background)`,
       } : {}}
     >
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
+      <div className="container flex h-14 sm:h-16 items-center gap-2 sm:gap-4 px-2 sm:px-4">
+        <div className="mr-2 sm:mr-4 flex items-center min-w-0">
           {!isHomePage && (
             <Link to="/">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-lg hover:bg-muted dark:hover:bg-slate-800 transition-colors"
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg hover:bg-muted dark:hover:bg-slate-800 transition-colors flex-shrink-0"
                 aria-label="Retour à la sélection de catalogue"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">Retour à la sélection de catalogue</span>
               </Button>
             </Link>
           )}
           {isHomePage && (
-            <div className="flex items-center space-x-2">
-              <Home className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
+            <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+              <Home className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate hidden xs:inline">
                 Sélection de catalogue
               </span>
             </div>
           )}
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2 md:gap-4 min-w-0">
           <ThemeToggle />
+          {session && (
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="relative h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0"
+              aria-label="Mes favoris"
+            >
+              <Link to="/favorites">
+                <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Link>
+            </Button>
+          )}
+          {session && isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="hidden md:flex flex-shrink-0"
+            >
+              <Link to="/admin">
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <span className="hidden lg:inline">Tableau de bord</span>
+              </Link>
+            </Button>
+          )}
           {session && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg flex-shrink-0">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs sm:text-sm">
                     {user?.email?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <span className="sr-only">Menu utilisateur</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-auto min-w-[180px] sm:min-w-[200px] max-w-[90vw]">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user?.email}</p>
+                  <p className="text-xs sm:text-sm font-medium break-words truncate">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400 cursor-pointer">
+                <DropdownMenuItem asChild>
+                  <Link to="/favorites" className="cursor-pointer text-sm">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Mes Favoris
+                  </Link>
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer text-sm">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Tableau de bord
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400 cursor-pointer text-sm">
                   <LogOut className="mr-2 h-4 w-4" />
                   Se déconnecter
                 </DropdownMenuItem>

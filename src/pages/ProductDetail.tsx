@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Product } from "@/types";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProductDetailSkeleton } from "@/components/ProductSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -56,24 +56,7 @@ const ProductDetail = () => {
   };
 
   if (loading || product === undefined) {
-    return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="mb-6">
-          <Skeleton className="h-9 w-40" />
-        </div>
-        <div className="grid md:grid-cols-2 gap-12">
-          <Skeleton className="w-full h-auto aspect-square rounded-lg" />
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-10 w-3/4" />
-            </div>
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-12 w-1/2" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {
@@ -110,6 +93,7 @@ const ProductDetail = () => {
                 alt={product.name}
                 className="rounded-lg object-contain w-full h-full transition-transform duration-300 hover:scale-105 cursor-pointer"
                 onClick={handleImageClick}
+                loading="lazy"
               />
             </AspectRatio>
           </div>

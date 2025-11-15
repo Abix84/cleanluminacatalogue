@@ -211,6 +211,33 @@ export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 export type ID = string;
 
+// ==========================================
+// CONTACT INFO TYPES
+// ==========================================
+
+export interface ContactInfo {
+  id: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  website?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ContactInfoFormData {
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  website?: string;
+}
+
 // Type guard functions
 export const isProduct = (obj: unknown): obj is Product => {
   return (

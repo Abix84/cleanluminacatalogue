@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Home, ShoppingCart, LogOut, Settings, Users, Shield, Eye } from "lucide-react";
+import { Home, ShoppingCart, LogOut, Settings, Users, Shield, Eye, Store, Database, Mail } from "lucide-react";
 import { ThemeToggle } from "../ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,17 +63,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-16 items-center border-b px-4 lg:px-6">
-            <Link to="/" className="flex items-center gap-2 font-semibold">
-              <img
-                src="/logo.png"
-                alt="CleanExpress Logo"
-                className="h-8 w-auto block dark:hidden"
-              />
-              <img
-                src="/logo_darkmode.png"
-                alt="CleanExpress Logo"
-                className="h-8 w-auto hidden dark:block"
-              />
+            <Link to="/" className="flex items-center gap-2 font-semibold hover:opacity-80 transition-opacity">
+              <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                <Store className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-semibold hidden lg:inline">Catalogue</span>
             </Link>
           </div>
           <div className="flex-1">
@@ -122,6 +116,40 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 >
                   <Users className="h-4 w-4" />
                   Utilisateurs
+                </NavLink>
+              </RequireAdmin>
+
+              {/* Backup et Restauration - Admin uniquement */}
+              <RequireAdmin
+                fallback={null}
+              >
+                <NavLink
+                  to="/admin/backup"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
+                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    }`
+                  }
+                >
+                  <Database className="h-4 w-4" />
+                  Backup
+                </NavLink>
+              </RequireAdmin>
+
+              {/* Informations de Contact - Admin uniquement */}
+              <RequireAdmin
+                fallback={null}
+              >
+                <NavLink
+                  to="/admin/contact"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
+                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    }`
+                  }
+                >
+                  <Mail className="h-4 w-4" />
+                  Contact
                 </NavLink>
               </RequireAdmin>
 

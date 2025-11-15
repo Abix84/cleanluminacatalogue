@@ -47,6 +47,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   PlusCircle,
   Download,
+  FileJson,
+  FileSpreadsheet,
   Stethoscope,
   Package,
   Tags,
@@ -65,6 +67,9 @@ import {
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@/types";
+import { exportToCSV, exportToJSON } from "@/lib/exportUtils";
+import { AdvancedStats } from "@/components/admin/AdvancedStats";
+import { DashboardCharts } from "@/components/admin/DashboardCharts";
 
 const AdminDashboard = () => {
   const { products, deleteProduct } = useProducts();
@@ -104,33 +109,59 @@ const AdminDashboard = () => {
     productsWithImages: products.filter((p) => p.image_url).length,
   };
 
-  // Gestion de la suppression
+  // Gestion de la suppression avec confirmation améliorée
   const handleDelete = async () => {
     if (!productToDelete) return;
+    const productName = productToDelete.name;
     try {
       await deleteProduct(productToDelete.id);
-      toast.success("Produit supprimé avec succès");
+      toast.success("Produit supprimé avec succès", {
+        description: `"${productName}" a été supprimé définitivement`,
+        duration: 3000,
+      });
       setProductToDelete(null);
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression", {
+        description: error instanceof Error ? error.message : "Une erreur inattendue s'est produite",
+        duration: 5000,
+      });
     }
   };
 
   // Export des données
-  const handleExport = () => {
-    const data = {
-      products,
-      utilityCategories,
-      brands,
-    };
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(data, null, 2),
-    )}`;
-    const link = document.createElement("a");
-    link.href = jsonString;
-    link.download = `cleanexpress_backup_${new Date().toISOString().split("T")[0]}.json`;
-    link.click();
-    toast.success("Données exportées avec succès !");
+  const handleExportJSON = () => {
+    try {
+      const data = {
+        products,
+        utilityCategories,
+        brands,
+      };
+      exportToJSON(data, "cleanexpress_backup");
+      toast.success("Export JSON réussi", {
+        description: `Données exportées : ${products.length} produits, ${utilityCategories.length} catégories, ${brands.length} marques`,
+        duration: 4000,
+      });
+    } catch (error) {
+      toast.error("Erreur lors de l'export JSON", {
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportToCSV(products, utilityCategories, brands, "cleanexpress_produits");
+      toast.success("Export CSV réussi", {
+        description: `${products.length} produits exportés au format CSV`,
+        duration: 4000,
+      });
+    } catch (error) {
+      toast.error("Erreur lors de l'export CSV", {
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        duration: 5000,
+      });
+    }
   };
 
   // Ouvrir l'image en grand
@@ -254,6 +285,7 @@ const AdminDashboard = () => {
                               src={product.image_url}
                               alt={product.name}
                               className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center">
@@ -393,15 +425,24 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <RequireAdmin fallback={null}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Exporter
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Exporter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportJSON} className="gap-2">
+                    <FileJson className="h-4 w-4" />
+                    Exporter en JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCSV} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Exporter en CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" asChild className="gap-2">
                 <Link to="/admin/diagnostic">
                   <Stethoscope className="h-4 w-4" />
@@ -426,8 +467,17 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        {/* Stats Cards - Advanced Stats */}
+        <AdvancedStats />
+
+        {/* Charts */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Analyses et Graphiques</h2>
+          <DashboardCharts />
+        </div>
+
+        {/* Stats Cards - Basic */}
+        <div className="grid gap-4 md:grid-cols-4 mt-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -582,6 +632,7 @@ const AdminDashboard = () => {
                             alt={product.name}
                             className="w-full h-full object-cover cursor-pointer transition-transform group-hover:scale-105"
                             onClick={() => handleImageClick(product.image_url!)}
+                            loading="lazy"
                           />
                           <Button
                             size="icon"
@@ -744,6 +795,7 @@ const AdminDashboard = () => {
                               src={product.image_url}
                               alt={product.name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="flex items-center justify-center h-full">
