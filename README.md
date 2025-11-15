@@ -465,4 +465,5 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ---
 
-**Fait avec ❤️ et [Dyad](https://dyad.sh)**
+**Fait avec ❤️ et [Dyad](https://dyad.sh)**#   c l e a n l u m i n a c a t a l o g u e  
+ 
