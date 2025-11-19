@@ -98,7 +98,7 @@ const Index = () => {
   // Calculer le nombre de produits filtrés pour les filtres avancés
   const filteredProductsCount = useMemo(() => {
     let filtered = products;
-    
+
     // Appliquer les filtres avancés
     if (advancedFilters.categoryId) {
       filtered = filtered.filter(p => p.utilityCategoryId === advancedFilters.categoryId);
@@ -114,7 +114,7 @@ const Index = () => {
     }
     if (debouncedSearchQuery) {
       const searchLower = debouncedSearchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(searchLower) ||
         p.description?.toLowerCase().includes(searchLower)
       );
@@ -122,7 +122,7 @@ const Index = () => {
     if (selectedCategory) {
       filtered = filtered.filter(p => p.utilityCategoryId === selectedCategory);
     }
-    
+
     return filtered.length;
   }, [products, advancedFilters, debouncedSearchQuery, selectedCategory]);
 
@@ -173,31 +173,36 @@ const Index = () => {
                 transition={{ delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-gray-200">
+                <div className="flex items-center gap-4">
                   {company ? (
-                    <img 
-                      src={theme.logo} 
-                      alt={`${company} Logo`}
-                      className="h-8 w-8 object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                    <div className="relative group">
+                      <div className="absolute -inset-2 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <img
+                        src={theme.logo}
+                        alt={`${company} Logo`}
+                        className="h-16 w-auto object-contain relative z-10 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
                   ) : (
-                    <Sparkles className="h-6 w-6 text-primary" />
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Sparkles className="h-6 w-6 text-primary" />
+                    </div>
                   )}
-                </div>
-                <div>
-                  <h1 
-                    className="text-2xl font-bold tracking-tight"
-                    style={{ color: theme.colors.primary }}
-                  >
-                    {company || "Catalogue"}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Catalogue Professionnel
-                  </p>
+                  <div>
+                    <h1
+                      className="text-3xl font-extrabold tracking-tight"
+                      style={{ color: theme.colors.primary }}
+                    >
+                      {company || "Catalogue"}
+                    </h1>
+                    <p className="text-base text-muted-foreground font-medium">
+                      Catalogue Professionnel
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -247,7 +252,7 @@ const Index = () => {
                 x: isSidebarOpen || isMobileSidebarOpen ? 0 : -20,
                 opacity: isSidebarOpen || isMobileSidebarOpen ? 1 : 0,
               }}
-                className={cn(
+              className={cn(
                 "fixed lg:sticky top-4 left-4 sm:top-6 sm:left-6 lg:left-0 z-40",
                 "bg-background/95 backdrop-blur-xl border rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/5",
                 "overflow-hidden transition-all duration-300",
@@ -589,8 +594,8 @@ const Index = () => {
                     <h2 className="text-lg sm:text-xl md:text-2xl font-bold break-words">
                       {selectedCategory
                         ? utilityCategories.find(
-                            (c) => c.id === selectedCategory,
-                          )?.name
+                          (c) => c.id === selectedCategory,
+                        )?.name
                         : "Notre Catalogue"}
                     </h2>
                     <p className="text-xs text-muted-foreground break-words mt-0.5">
@@ -620,10 +625,9 @@ const Index = () => {
                     variant="secondary"
                     className="gap-2 px-3 py-1.5 rounded-xl"
                     style={{
-                      backgroundColor: `${
-                        utilityCategories.find((c) => c.id === selectedCategory)
+                      backgroundColor: `${utilityCategories.find((c) => c.id === selectedCategory)
                           ?.color
-                      }15`,
+                        }15`,
                       borderColor: utilityCategories.find(
                         (c) => c.id === selectedCategory,
                       )?.color,
