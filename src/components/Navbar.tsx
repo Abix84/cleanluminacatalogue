@@ -24,7 +24,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { session, user, isAdmin } = useAuth();
   const [isDark, setIsDark] = useState(false);
-  
+
   // Appliquer les variables CSS du thème
   useCompanyThemeCSS();
 
@@ -37,11 +37,11 @@ const Navbar = () => {
       navigate("/login");
     }
   };
-  
+
   useEffect(() => {
     // Vérifier que window est disponible (SSR safety)
     if (typeof window === "undefined") return;
-    
+
     const checkDarkMode = () => {
       if (colorTheme === "dark") {
         setIsDark(true);
@@ -52,9 +52,9 @@ const Navbar = () => {
         setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
       }
     };
-    
+
     checkDarkMode();
-    
+
     // Écouter les changements de préférence système
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
@@ -62,35 +62,35 @@ const Navbar = () => {
         setIsDark(mediaQuery.matches);
       }
     };
-    
+
     mediaQuery.addEventListener("change", handleChange);
-    
+
     // Écouter les changements de classe sur le document
     const observer = new MutationObserver(() => {
       checkDarkMode();
     });
-    
+
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
-    
+
     return () => {
       mediaQuery.removeEventListener("change", handleChange);
       observer.disconnect();
     };
   }, [colorTheme]);
-  
+
   // Déterminer si on est sur la page d'accueil
   const isHomePage = location.pathname === "/";
 
   return (
-    <header 
-      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-slate-900/95 dark:border-slate-700"
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 dark:bg-slate-900/80 dark:border-slate-700/50 transition-all duration-300"
       style={company && !isHomePage ? {
         borderColor: `var(--company-border)`,
-        backgroundColor: isDark 
-          ? `var(--company-background)` 
+        backgroundColor: isDark
+          ? `var(--company-background)`
           : `var(--company-background)`,
       } : {}}
     >

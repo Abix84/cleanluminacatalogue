@@ -89,7 +89,8 @@ const ProductDetail = () => {
         </div>
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <div>
-            <AspectRatio ratio={1 / 1} className="bg-white rounded-lg border shadow-lg overflow-hidden">
+            <AspectRatio ratio={1 / 1} className="bg-card rounded-2xl border shadow-2xl shadow-black/5 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
               <img
                 src={product.image_url || "/placeholder.svg"}
                 alt={product.name}

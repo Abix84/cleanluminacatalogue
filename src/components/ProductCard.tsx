@@ -126,7 +126,7 @@ const ProductCard = memo(({
           to={`/product/${product.id}`}
           className="flex flex-col h-full group"
         >
-          <Card className="flex flex-col h-full overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10">
+          <Card className="flex flex-col h-full overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)] bg-card/50 backdrop-blur-sm">
             {/* Image Container */}
             <CardHeader className="p-0 relative overflow-hidden">
               <AspectRatio
@@ -162,7 +162,7 @@ const ProductCard = memo(({
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="gap-2 shadow-lg"
+                      className="gap-2 shadow-lg bg-white/90 hover:bg-white text-foreground backdrop-blur-md border border-white/20"
                       onClick={handleQuickView}
                     >
                       <Eye className="h-4 w-4" />
@@ -234,7 +234,7 @@ const ProductCard = memo(({
               )}
 
               {/* Product Name */}
-              <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+              <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
                 {product.name}
               </h3>
 
@@ -256,26 +256,26 @@ const ProductCard = memo(({
               <Separator className="my-3" />
 
               {/* Price and Availability */}
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="min-w-0 flex-1">
-                  {isAdmin && (
-                    <>
-                      <div className="text-lg sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600 truncate">
-                        {formatPrice(product.price)}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Prix unitaire</p>
-                    </>
-                  )}
+              {/* Price and Availability */}
+              <div className="flex flex-col gap-3 mt-auto">
+                {isAdmin && (
+                  <div className="w-full">
+                    <div className="text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
+                      {formatPrice(product.price)}
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">Prix unitaire HT</p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/50 dark:border-emerald-800/50 gap-1.5 flex-shrink-0 px-2.5 py-1"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">En stock</span>
+                  </Badge>
                 </div>
-                {/* Available Badge - Moved here from image */}
-                <Badge
-                  variant="secondary"
-                  className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 gap-1 flex-shrink-0"
-                >
-                  <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
-                  <span className="text-xs text-green-700 dark:text-green-300 hidden xs:inline">Disponible</span>
-                  <span className="text-xs text-green-700 dark:text-green-300 xs:hidden">OK</span>
-                </Badge>
               </div>
             </CardContent>
 

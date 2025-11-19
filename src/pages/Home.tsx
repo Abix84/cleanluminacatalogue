@@ -17,13 +17,14 @@ const HomePage: React.FC = () => {
       {/* SEO Meta Tags - Sera géré par React Helmet dans App.tsx */}
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         {/* Header Section */}
-        <header className="py-8 md:py-12 lg:py-16 px-4">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 dark:from-slate-200 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
+        <header className="py-12 md:py-20 lg:py-24 px-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
+          <div className="container mx-auto max-w-5xl text-center relative z-10">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight bg-gradient-to-r from-slate-900 via-slate-700 to-slate-800 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-1000">
               Choisissez votre catalogue
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 mt-4 max-w-2xl mx-auto">
-              Sélectionnez une entreprise pour accéder à son catalogue de produits
+            <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 mt-6 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
+              Sélectionnez une entreprise pour accéder à son catalogue de produits exclusifs
             </p>
           </div>
         </header>
@@ -40,16 +41,19 @@ const HomePage: React.FC = () => {
               }}
               aria-label="Accéder au catalogue CleanExpress"
             >
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out z-20" />
+
               {/* Overlay effect */}
-              <div className="absolute top-0 left-0 w-full h-full bg-black/5 group-hover:bg-black/0 transition-opacity duration-300" aria-hidden="true" />
-              
+              <div className="absolute top-0 left-0 w-full h-full bg-black/10 group-hover:bg-black/0 transition-opacity duration-300" aria-hidden="true" />
+
               {/* Content */}
               <div className="z-10 flex flex-col items-center text-center flex-1 justify-center w-full">
                 {/* Logo */}
                 <div className="mb-6 md:mb-8">
-                  <img 
-                    src="/logos/cleanexpress-logo-dark.png" 
-                    alt="Logo CleanExpress - Produits de nettoyage professionnels" 
+                  <img
+                    src="/logos/cleanexpress-logo-dark.png"
+                    alt="Logo CleanExpress - Produits de nettoyage professionnels"
                     className="w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] md:w-[200px] md:h-[200px] object-contain drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
                     loading="eager"
                     onError={(e) => {
@@ -73,7 +77,7 @@ const HomePage: React.FC = () => {
               </div>
 
               {/* CTA Button */}
-              <button 
+              <button
                 className="z-10 mt-4 md:mt-6 bg-white text-[#e73c1d] font-bold py-3 px-6 md:px-8 rounded-xl shadow-xl transition-all duration-300 ease-in-out transform group-hover:scale-110 group-hover:shadow-2xl hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-white/50"
                 aria-label="Voir les produits CleanExpress"
               >
@@ -90,16 +94,19 @@ const HomePage: React.FC = () => {
               }}
               aria-label="Accéder au catalogue Lumina Distribution"
             >
+              {/* Shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out z-20" />
+
               {/* Overlay effect */}
-              <div className="absolute top-0 left-0 w-full h-full bg-black/5 group-hover:bg-black/0 transition-opacity duration-300" aria-hidden="true" />
-              
+              <div className="absolute top-0 left-0 w-full h-full bg-black/10 group-hover:bg-black/0 transition-opacity duration-300" aria-hidden="true" />
+
               {/* Content */}
               <div className="z-10 flex flex-col items-center text-center flex-1 justify-center w-full">
                 {/* Logo */}
                 <div className="mb-6 md:mb-8">
-                  <img 
-                    src="/logos/lumina-logo-dark.png" 
-                    alt="Logo Lumina Distribution - Distribution de produits professionnels" 
+                  <img
+                    src="/logos/lumina-logo-dark.png"
+                    alt="Logo Lumina Distribution - Distribution de produits professionnels"
                     className="w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] md:w-[200px] md:h-[200px] object-contain drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
                     loading="eager"
                     onError={(e) => {
@@ -123,7 +130,7 @@ const HomePage: React.FC = () => {
               </div>
 
               {/* CTA Button */}
-              <button 
+              <button
                 className="z-10 mt-4 md:mt-6 bg-white text-[#273e92] font-bold py-3 px-6 md:px-8 rounded-xl shadow-xl transition-all duration-300 ease-in-out transform group-hover:scale-110 group-hover:shadow-2xl hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-white/50"
                 aria-label="Voir les produits Lumina Distribution"
               >
