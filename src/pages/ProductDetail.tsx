@@ -11,12 +11,14 @@ import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { useBrands } from "@/context/BrandContextUnified";
 import { formatPrice } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { getProductById } = useProducts();
   const { getUtilityCategoryById } = useUtilityCategories();
   const { getBrandById } = useBrands();
+  const { isAdmin } = useAuth();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,9 +116,11 @@ const ProductDetail = () => {
             <p className="text-muted-foreground leading-relaxed text-base">
               {product.description || "Aucune description disponible."}
             </p>
-            <div className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-              {formatPrice(product.price)}
-            </div>
+            {isAdmin && (
+              <div className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                {formatPrice(product.price)}
+              </div>
+            )}
           </div>
         </div>
       </div>

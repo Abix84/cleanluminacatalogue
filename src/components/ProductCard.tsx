@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProductCardProps {
   product: Product;
@@ -51,9 +52,10 @@ const ProductCard = memo(({
   const { getUtilityCategoryById } = useUtilityCategories();
   const { getBrandById } = useBrands();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isAdmin } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  
+
   const isProductFavorite = isFavorite(product.id);
 
   // Calcul direct - pas besoin de useMemo car le calcul est rapide
@@ -256,10 +258,14 @@ const ProductCard = memo(({
               {/* Price and Availability */}
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="min-w-0 flex-1">
-                  <div className="text-lg sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600 truncate">
-                    {formatPrice(product.price)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Prix unitaire</p>
+                  {isAdmin && (
+                    <>
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600 truncate">
+                        {formatPrice(product.price)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Prix unitaire</p>
+                    </>
+                  )}
                 </div>
                 {/* Available Badge - Moved here from image */}
                 <Badge
@@ -346,12 +352,14 @@ const ProductCard = memo(({
 
               <Separator />
 
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Prix</p>
-                <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-                  {formatPrice(product.price)}
+              {isAdmin && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Prix</p>
+                  <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
+                    {formatPrice(product.price)}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-2">
                 <Button asChild className="flex-1">
