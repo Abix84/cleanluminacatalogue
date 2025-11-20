@@ -5,15 +5,37 @@ import { initializeStorage } from "./lib/localStorage";
 
 // Fonction asynchrone pour initialiser et démarrer l'app
 async function initializeAndStartApp() {
-  // Initialiser le stockage local avec les données de démonstration
+  // Vérifier si c'est le premier chargement
+  const isFirstLoad = !localStorage.getItem('app_initialized');
+
+  // Initialiser le stockagelocal avec les données de démonstration
   console.log(
     "📦 Initialisation du localStorage avec les données de démonstration",
   );
 
   try {
     initializeStorage();
-    // Petit délai pour s'assurer que localStorage est bien écrit
-    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Si c'est le premier chargement, attendre plus longtemps et recharger
+    if (isFirstLoad) {
+      console.log("🔄 Premier chargement détecté - initialisation...");
+      localStorage.setItem('app_initialized', 'true');
+
+      // Attendre que les données soient écrites
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Vérifier que les données sont bien là
+      const hasProducts = !!localStorage.getItem('cleanexpress_products');
+      const hasCategories = !!localStorage.getItem('cleanexpress_categories');
+      const hasBrands = !!localStorage.getItem('cleanexpress_brands');
+
+      if (hasProducts && hasCategories && hasBrands) {
+        console.log("✅ Données initialisées, rechargement de la page...");
+        window.location.reload();
+        return; // Empêcher le rendu, on recharge
+      }
+    }
+
     console.log("✅ localStorage initialisé");
   } catch (error) {
     console.error("❌ Erreur lors de l'initialisation du localStorage:", error);
@@ -47,3 +69,4 @@ ${error instanceof Error ? error.stack : String(error)}
 
 // Démarrer l'application
 initializeAndStartApp();
+
