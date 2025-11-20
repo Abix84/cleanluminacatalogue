@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useProducts } from "@/context/ProductContext";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
+import { useProducts } from "@/context/ProductContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
 import { useAuth } from "@/context/AuthContext";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import VendeurProfile from "@/components/admin/VendeurProfile";
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
     try {
       const data = {
         products,
-        categories: utilityCategories,
+        utilityCategories,
         brands,
       };
       exportToJSON(data, "cleanexpress_backup");

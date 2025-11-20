@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
 import { useEffect, useState, useRef } from "react";
 import {
   Upload,

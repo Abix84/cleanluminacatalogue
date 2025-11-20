@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
 import {
   UtilityCategory,
   UtilityCategoryFormData,
@@ -7,7 +7,7 @@ import {
 import { toast } from "sonner";
 import { localStorageCategories } from "@/lib/localStorage";
 
-const isOfflineMode = false;
+const isOfflineMode = IS_OFFLINE_MODE;
 
 // ==========================================
 // QUERY KEYS

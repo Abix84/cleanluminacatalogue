@@ -4,9 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ProductProvider } from "./context/ProductContext";
-import { UtilityCategoryProvider } from "./context/UtilityCategoryContext";
-import { BrandProvider } from "./context/BrandContext";
+import { ProductProvider } from "./context/ProductContextUnified";
+import { UtilityCategoryProvider } from "./context/UtilityCategoryContextUnified";
+import { BrandProvider } from "./context/BrandContextUnified";
 import { ContactProvider } from "./context/ContactContext";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -41,7 +41,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false,
       retry: 1,
     },

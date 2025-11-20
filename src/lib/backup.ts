@@ -1,5 +1,5 @@
 import { Product, Brand, UtilityCategory } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
 import { localStorageProducts, localStorageBrands, localStorageCategories } from "@/lib/localStorage";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ export interface BackupData {
 }
 
 const BACKUP_VERSION = "1.0.0";
-const isOfflineMode = false;
+const isOfflineMode = IS_OFFLINE_MODE;
 
 /**
  * Crée un backup de toutes les données

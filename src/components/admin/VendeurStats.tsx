@@ -1,6 +1,6 @@
-import { useProducts } from "@/context/ProductContext";
-import { useBrands } from "@/context/BrandContext";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useProducts } from "@/context/ProductContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import {
   Card,
   CardContent,

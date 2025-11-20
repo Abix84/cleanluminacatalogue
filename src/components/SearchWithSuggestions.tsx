@@ -3,9 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Clock, TrendingUp } from "lucide-react";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
-import { useProducts } from "@/context/ProductContext";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
+import { useProducts } from "@/context/ProductContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
 import { cn } from "@/lib/utils";
 
 interface SearchWithSuggestionsProps {

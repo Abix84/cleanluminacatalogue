@@ -24,8 +24,8 @@ import {
   ChevronUp,
   SlidersHorizontal,
 } from "lucide-react";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
-import { useBrands } from "@/context/BrandContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useBrands } from "@/context/BrandContextUnified";
 import { ProductFilters } from "@/types";
 import { formatPrice } from "@/lib/utils";
 

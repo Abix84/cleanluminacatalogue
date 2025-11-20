@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { UtilityCategory } from "@/types";
 import {
   Dialog,

@@ -70,17 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        // Gestion spécifique des erreurs d'authentification (401)
-        if (error.code === '401' || error.message?.includes('JWT')) {
-          console.error('[AuthContext] 401 Unauthorized during profile fetch, signing out...');
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setRole(null);
-          setProfile(null);
-          return;
-        }
-
         if (error.code === 'PGRST116') {
           // No rows returned - utilisateur sans profil, créer un profil par défaut
           console.log('[AuthContext] No profile found for user, creating default profile:', userId);
@@ -154,25 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null);
           setLoading(false);
           return;
-        }
-
-        // Validation supplémentaire de la session côté serveur
-        if (session) {
-          const { error: userError } = await supabase.auth.getUser();
-
-          if (userError) {
-            console.error('[AuthContext] Session invalid (getUser failed), signing out:', userError);
-            await supabase.auth.signOut();
-
-            if (mounted) {
-              setSession(null);
-              setUser(null);
-              setRole(null);
-              setProfile(null);
-              setLoading(false);
-            }
-            return;
-          }
         }
 
         setSession(session);

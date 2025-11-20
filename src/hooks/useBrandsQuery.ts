@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
 import { Brand, BrandFormData } from "@/types";
 import { toast } from "sonner";
 import { localStorageBrands } from "@/lib/localStorage";
 
-const isOfflineMode = false;
+const isOfflineMode = IS_OFFLINE_MODE;
 
 // ==========================================
 // QUERY KEYS

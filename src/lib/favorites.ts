@@ -1,7 +1,7 @@
 import { Product } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
 
-const isOfflineMode = false;
+const isOfflineMode = IS_OFFLINE_MODE;
 const STORAGE_KEY = "cleanexpress_favorites";
 
 // ==========================================

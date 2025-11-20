@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ProductForm from "@/components/admin/ProductForm";
-import { useProducts } from "@/context/ProductContext";
+import { useProducts } from "@/context/ProductContextUnified";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";

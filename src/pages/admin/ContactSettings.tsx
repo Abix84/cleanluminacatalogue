@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Mail, Phone, MapPin, Globe, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-
+import { IS_OFFLINE_MODE } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
@@ -35,7 +35,7 @@ type ContactFormValues = z.infer<typeof formSchema>;
 const ContactSettings = () => {
   const { contactInfo, updateContactInfo, loading, error } = useContact();
   const [isSaving, setIsSaving] = useState(false);
-  const isOfflineMode = false;
+  const isOfflineMode = IS_OFFLINE_MODE;
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
@@ -68,12 +68,7 @@ const ContactSettings = () => {
     try {
       setIsSaving(true);
       await updateContactInfo({
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        city: data.city,
-        postalCode: data.postalCode,
-        country: data.country,
+        ...data,
         website: data.website || undefined,
       });
     } catch (error: any) {

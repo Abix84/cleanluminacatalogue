@@ -3,7 +3,6 @@ import { Menu, Package2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
 import { useCompanyTheme } from "@/hooks/useCompanyTheme";
 import { useTheme } from "@/components/ThemeProvider";
 import { useState } from "react";
@@ -151,7 +150,6 @@ const Navbar = () => {
                         {/* Search could go here */}
                     </div>
                     <nav className="flex items-center gap-2">
-
                         <ThemeToggle />
                         <Link to="/login">
                             <Button variant="ghost" size="icon">
