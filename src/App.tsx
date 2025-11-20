@@ -4,11 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ProductProvider } from "./context/ProductContextUnified";
-import { UtilityCategoryProvider } from "./context/UtilityCategoryContextUnified";
-import { BrandProvider } from "./context/BrandContextUnified";
+import { ProductProvider } from "./context/ProductContext";
+import { UtilityCategoryProvider } from "./context/UtilityCategoryContext";
+import { BrandProvider } from "./context/BrandContext";
 import { ContactProvider } from "./context/ContactContext";
-import { OnlineStatusProvider } from "./context/OnlineStatusContext";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/admin/AdminLayout";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -42,7 +41,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -64,138 +63,136 @@ const App = () => (
           <BrowserRouter>
             <SEOHead />
             <AuthProvider>
-              <OnlineStatusProvider>
-                <UtilityCategoryProvider>
-                  <BrandProvider>
-                    <ProductProvider>
-                      <ContactProvider>
-                        <Toaster />
-                        <Sonner />
-                        <Suspense fallback={<PageLoader />}>
-                          <Routes>
-                            {/* Route de login - accessible sans authentification */}
+              <UtilityCategoryProvider>
+                <BrandProvider>
+                  <ProductProvider>
+                    <ContactProvider>
+                      <Toaster />
+                      <Sonner />
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                          {/* Route de login - accessible sans authentification */}
+                          <Route
+                            path="/login"
+                            element={<Login />}
+                          />
+
+                          {/* Routes publiques protégées - nécessitent une authentification */}
+                          <Route element={<PublicRoute />}>
+                            <Route path="/" element={<Home />} />
                             <Route
-                              path="/login"
-                              element={<Login />}
+                              path="/catalogue/:brandName"
+                              element={
+                                <Layout>
+                                  <Catalog />
+                                </Layout>
+                              }
                             />
+                            <Route
+                              path="/product/:id"
+                              element={
+                                <Layout>
+                                  <ProductDetail />
+                                </Layout>
+                              }
+                            />
+                            <Route
+                              path="/contact"
+                              element={
+                                <Layout>
+                                  <Contact />
+                                </Layout>
+                              }
+                            />
+                            <Route
+                              path="/favorites"
+                              element={
+                                <Layout>
+                                  <Favorites />
+                                </Layout>
+                              }
+                            />
+                          </Route>
 
-                            {/* Routes publiques protégées - nécessitent une authentification */}
-                            <Route element={<PublicRoute />}>
-                              <Route path="/" element={<Home />} />
-                              <Route
-                                path="/catalogue/:brandName"
-                                element={
-                                  <Layout>
-                                    <Catalog />
-                                  </Layout>
-                                }
-                              />
-                              <Route
-                                path="/product/:id"
-                                element={
-                                  <Layout>
-                                    <ProductDetail />
-                                  </Layout>
-                                }
-                              />
-                              <Route
-                                path="/contact"
-                                element={
-                                  <Layout>
-                                    <Contact />
-                                  </Layout>
-                                }
-                              />
-                              <Route
-                                path="/favorites"
-                                element={
-                                  <Layout>
-                                    <Favorites />
-                                  </Layout>
-                                }
-                              />
-                            </Route>
+                          {/* Dashboard - Accessible en lecture seule (Admin + Vendeur) */}
+                          <Route element={<ProtectedRoute />}>
+                            <Route
+                              path="/admin"
+                              element={
+                                <AdminLayout>
+                                  <AdminDashboard />
+                                </AdminLayout>
+                              }
+                            />
+                          </Route>
 
-                            {/* Dashboard - Accessible en lecture seule (Admin + Vendeur) */}
-                            <Route element={<ProtectedRoute />}>
-                              <Route
-                                path="/admin"
-                                element={
-                                  <AdminLayout>
-                                    <AdminDashboard />
-                                  </AdminLayout>
-                                }
-                              />
-                            </Route>
+                          {/* Routes Admin uniquement - Modification requise */}
+                          <Route element={<AdminRoute />}>
+                            <Route
+                              path="/admin/products/new"
+                              element={
+                                <AdminLayout>
+                                  <AddProduct />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/products/edit/:id"
+                              element={
+                                <AdminLayout>
+                                  <EditProduct />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/diagnostic"
+                              element={
+                                <AdminLayout>
+                                  <Diagnostic />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/management"
+                              element={
+                                <AdminLayout>
+                                  <Management />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/users"
+                              element={
+                                <AdminLayout>
+                                  <Users />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/backup"
+                              element={
+                                <AdminLayout>
+                                  <Backup />
+                                </AdminLayout>
+                              }
+                            />
+                            <Route
+                              path="/admin/contact"
+                              element={
+                                <AdminLayout>
+                                  <ContactSettings />
+                                </AdminLayout>
+                              }
+                            />
+                          </Route>
 
-                            {/* Routes Admin uniquement - Modification requise */}
-                            <Route element={<AdminRoute />}>
-                              <Route
-                                path="/admin/products/new"
-                                element={
-                                  <AdminLayout>
-                                    <AddProduct />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/products/edit/:id"
-                                element={
-                                  <AdminLayout>
-                                    <EditProduct />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/diagnostic"
-                                element={
-                                  <AdminLayout>
-                                    <Diagnostic />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/management"
-                                element={
-                                  <AdminLayout>
-                                    <Management />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/users"
-                                element={
-                                  <AdminLayout>
-                                    <Users />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/backup"
-                                element={
-                                  <AdminLayout>
-                                    <Backup />
-                                  </AdminLayout>
-                                }
-                              />
-                              <Route
-                                path="/admin/contact"
-                                element={
-                                  <AdminLayout>
-                                    <ContactSettings />
-                                  </AdminLayout>
-                                }
-                              />
-                            </Route>
-
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </Suspense>
-                      </ContactProvider>
-                    </ProductProvider>
-                  </BrandProvider>
-                </UtilityCategoryProvider>
-              </OnlineStatusProvider>
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </ContactProvider>
+                  </ProductProvider>
+                </BrandProvider>
+              </UtilityCategoryProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

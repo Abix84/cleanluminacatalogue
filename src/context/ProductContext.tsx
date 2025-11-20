@@ -11,7 +11,7 @@ import {
   ProductContextType,
   ApiError,
 } from "@/types";
-import { localStorageProducts, localStorageImages } from "@/lib/localStorage";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -26,15 +26,21 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<ApiError | null>(null);
 
   /**
-   * Fetches all products from localStorage
+   * Fetches all products from Supabase
    */
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const data = await localStorageProducts.getAll();
-      setProducts(data.sort((a, b) => a.name.localeCompare(b.name)));
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+
+      setProducts((data || []).sort((a, b) => a.name.localeCompare(b.name)));
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -58,7 +64,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   /**
-   * Adds a new product to localStorage
+   * Adds a new product to Supabase
    */
   const addProduct = async (productData: ProductFormData): Promise<void> => {
     try {
@@ -69,53 +75,44 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       // Handle image upload if present
       if (productData.image_url && productData.image_url instanceof File) {
         const file = productData.image_url;
-        // Create a temporary product without image first
-        const tempProductData = {
-          name: productData.name,
-          description: productData.description,
-          price: productData.price,
-          image_url: null,
-          utilityCategoryId: productData.utilityCategoryId,
-          brandId: productData.brandId,
-        };
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-        const newProduct = await localStorageProducts.create(tempProductData);
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, file);
 
-        // Now upload the image with the product ID
-        imageUrl = await localStorageImages.upload(file, newProduct.id);
+        if (uploadError) throw uploadError;
 
-        // Update the product with the image URL
-        const updatedProduct = await localStorageProducts.update(
-          newProduct.id,
-          {
-            ...newProduct,
-            image_url: imageUrl,
-          },
-        );
+        const { data: { publicUrl } } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
 
-        // Add the updated product (with image) to state
-        setProducts((prev) =>
-          [...prev, updatedProduct].sort((a, b) =>
-            a.name.localeCompare(b.name),
-          ),
-        );
-        toast.success("Produit ajouté avec succès !");
-      } else {
-        // No image, create product directly
-        const newProduct = await localStorageProducts.create({
-          name: productData.name,
-          description: productData.description,
-          price: productData.price,
-          image_url: null,
-          utilityCategoryId: productData.utilityCategoryId,
-          brandId: productData.brandId,
-        });
-
-        setProducts((prev) =>
-          [...prev, newProduct].sort((a, b) => a.name.localeCompare(b.name)),
-        );
-        toast.success("Produit ajouté avec succès !");
+        imageUrl = publicUrl;
       }
+
+      const newProductData = {
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        image_url: imageUrl,
+        utility_category_id: productData.utilityCategoryId,
+        brand_id: productData.brandId,
+      };
+
+      const { data, error } = await supabase
+        .from("products")
+        .insert([newProductData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProducts((prev) =>
+        [...prev, data].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      toast.success("Produit ajouté avec succès !");
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -134,7 +131,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Updates an existing product in localStorage
+   * Updates an existing product in Supabase
    */
   const updateProduct = async (
     updatedProduct: Product,
@@ -147,34 +144,46 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
       // Handle image upload if a new file is provided
       if (imageFile) {
-        // Delete old image if exists
-        if (updatedProduct.image_url) {
-          try {
-            await localStorageImages.delete(updatedProduct.image_url);
-          } catch (err) {
-            console.warn("Could not delete old image:", err);
-          }
-        }
+        const file = imageFile;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-        // Upload new image
-        imageUrl = await localStorageImages.upload(
-          imageFile,
-          updatedProduct.id,
-        );
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
       }
 
-      // Update product
       const productToUpdate = {
-        ...updatedProduct,
+        name: updatedProduct.name,
+        description: updatedProduct.description,
+        price: updatedProduct.price,
         image_url: imageUrl,
+        utility_category_id: updatedProduct.utilityCategoryId,
+        brand_id: updatedProduct.brandId,
       };
 
-      await localStorageProducts.update(updatedProduct.id, productToUpdate);
+      const { data, error } = await supabase
+        .from("products")
+        .update(productToUpdate)
+        .eq("id", updatedProduct.id)
+        .select()
+        .single();
+
+      if (error) throw error;
 
       setProducts((prev) =>
         prev
-          .map((p) => (p.id === updatedProduct.id ? productToUpdate : p))
-          .sort((a, b) => a.name.localeCompare(b.name)),
+          .map((p) => (p.id === updatedProduct.id ? data : p))
+          .sort((a, b) => a.name.localeCompare(b.name))
       );
       toast.success("Produit mis à jour avec succès !");
     } catch (err) {
@@ -195,26 +204,18 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Deletes a product from localStorage
+   * Deletes a product from Supabase
    */
   const deleteProduct = async (productId: string): Promise<void> => {
     try {
       setError(null);
 
-      // Find product to get image URL
-      const product = products.find((p) => p.id === productId);
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
 
-      // Delete image if exists
-      if (product?.image_url) {
-        try {
-          await localStorageImages.delete(product.image_url);
-        } catch (err) {
-          console.warn("Could not delete product image:", err);
-        }
-      }
-
-      // Delete product
-      await localStorageProducts.delete(productId);
+      if (error) throw error;
 
       setProducts((prev) => prev.filter((p) => p.id !== productId));
       toast.success("Produit supprimé avec succès !");
