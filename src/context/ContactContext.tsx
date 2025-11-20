@@ -68,6 +68,10 @@ const fetchOnlineContactInfo = async (): Promise<ContactInfo | null> => {
     throw error;
   }
 
+  if (!data) {
+    return null;
+  }
+
   return {
     id: data.id,
     email: data.email,
