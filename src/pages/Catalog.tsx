@@ -74,9 +74,21 @@ const Catalog = () => {
     cat.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
   );
 
-  const filteredBrands = brands.filter((brand) =>
-    brand.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
-  );
+  // Filter brands to show only those with products in the current company
+  const filteredBrands = useMemo(() => {
+    // Get unique brand IDs from products of the current company
+    const companyBrandIds = new Set(
+      products
+        .filter(p => p.brandId) // Only products with a brand
+        .map(p => p.brandId)
+    );
+
+    // Filter brands that have products in this company and match search
+    return brands.filter((brand) =>
+      companyBrandIds.has(brand.id) &&
+      brand.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
+    );
+  }, [brands, products, sidebarSearchQuery]);
 
   // Filtered products count
   const filteredProductsCount = useMemo(() => {
