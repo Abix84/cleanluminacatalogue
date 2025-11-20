@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const createDefaultProfile = useCallback(async (userId: string, userEmail: string) => {
     try {
       console.log('[AuthContext] Creating default profile for new user:', userId);
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .insert({
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUserRole = useCallback(async (userId: string, userEmail?: string) => {
     try {
       console.log('[AuthContext] Fetching profile for user:', userId);
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, role, avatar_url, created_at, updated_at')
@@ -70,10 +70,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
+        // Gestion spécifique des erreurs d'authentification (401)
+        if (error.code === '401' || error.message?.includes('JWT')) {
+          console.error('[AuthContext] 401 Unauthorized during profile fetch, signing out...');
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setProfile(null);
+          return;
+        }
+
         if (error.code === 'PGRST116') {
           // No rows returned - utilisateur sans profil, créer un profil par défaut
           console.log('[AuthContext] No profile found for user, creating default profile:', userId);
-          
+
           if (userEmail) {
             const newProfile = await createDefaultProfile(userId, userEmail);
             if (newProfile) {
@@ -82,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               return;
             }
           }
-          
+
           // Si la création échoue, définir le rôle comme visiteur quand même
           setRole('visiteur');
           setProfile(null);
@@ -132,9 +143,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (!mounted) return;
-        
+
         if (error) {
           console.error('Error getting session:', error);
           setSession(null);
@@ -145,9 +156,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // Validation supplémentaire de la session côté serveur
+        if (session) {
+          const { error: userError } = await supabase.auth.getUser();
+
+          if (userError) {
+            console.error('[AuthContext] Session invalid (getUser failed), signing out:', userError);
+            await supabase.auth.signOut();
+
+            if (mounted) {
+              setSession(null);
+              setUser(null);
+              setRole(null);
+              setProfile(null);
+              setLoading(false);
+            }
+            return;
+          }
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user?.id) {
           console.log('[AuthContext] Initial session - User ID:', session.user.id);
           console.log('[AuthContext] Initial session - User email:', session.user.email);
@@ -181,11 +211,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('[AuthContext] Auth state change event:', _event);
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Mettre loading à false immédiatement pour permettre la navigation
         // Le rôle sera chargé en arrière-plan
         setLoading(false);
-        
+
         if (session?.user?.id) {
           console.log('[AuthContext] Auth state change - User ID:', session.user.id);
           console.log('[AuthContext] Auth state change - User email:', session.user.email);
