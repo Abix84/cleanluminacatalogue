@@ -82,7 +82,8 @@ const onlineDeleteBrand = async (brandId: string): Promise<void> => {
  * Synchronously loads brands from localStorage for initial state
  */
 const getInitialBrands = (): Brand[] => {
-  if (!isOfflineMode) return [];
+  // Always try to load from localStorage first (Cache-First Strategy)
+  // if (!isOfflineMode) return []; // REMOVED
 
   try {
     const stored = localStorage.getItem('cleanexpress_brands');

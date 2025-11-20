@@ -274,7 +274,8 @@ const onlineDeleteProduct = async (
  * This prevents the race condition where useEffect runs before data is written
  */
 const getInitialProducts = (): Product[] => {
-  if (!isOfflineMode) return [];
+  // Always try to load from localStorage first (Cache-First Strategy)
+  // if (!isOfflineMode) return []; // REMOVED: We want cache even in online mode
 
   try {
     const stored = localStorage.getItem('cleanexpress_products');
@@ -290,11 +291,10 @@ const getInitialProducts = (): Product[] => {
 
 // ==========================================
 // PROVIDER COMPONENT
-// ==========================================
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   // Initialize with data from localStorage if offline mode
-  const [products, setProducts] = useState<Product[]>(getInitialProducts());
+  const [products, setProducts] = useState<Product[]>(() => getInitialProducts());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -326,8 +326,8 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
           description: item.description,
           price: item.price,
           image_url: item.image_url,
-          utilityCategoryId: item.utility_category_id,
-          brandId: item.brand_id,
+          utility_category_id: item.utility_category_id,
+          brand_id: item.brand_id,
           company: item.company,
         }));
       }
@@ -351,12 +351,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Charger les produits au montage et écouter les mises à jour
   useEffect(() => {
-    fetchProducts();
+    if (products.length === 0) {
+      fetchProducts();
+    }
 
-    // Écouter l'événement de synchronisation
     const handleDataSynced = () => {
-      console.log('Data synced event received - refreshing products');
       fetchProducts();
     };
 

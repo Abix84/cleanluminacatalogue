@@ -105,7 +105,8 @@ const onlineDeleteCategory = async (categoryId: string): Promise<void> => {
  * Synchronously loads categories from localStorage for initial state
  */
 const getInitialCategories = (): UtilityCategory[] => {
-  if (!isOfflineMode) return [];
+  // Always try to load from localStorage first (Cache-First Strategy)
+  // if (!isOfflineMode) return []; // REMOVED
 
   try {
     const stored = localStorage.getItem('cleanexpress_categories');
