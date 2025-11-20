@@ -1,5 +1,5 @@
 import { Product, Brand, UtilityCategory } from "@/types";
-import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { localStorageProducts, localStorageBrands, localStorageCategories } from "@/lib/localStorage";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ export interface BackupData {
 }
 
 const BACKUP_VERSION = "1.0.0";
-const isOfflineMode = IS_OFFLINE_MODE;
+const isOfflineMode = false;
 
 /**
  * Crée un backup de toutes les données
@@ -107,8 +107,7 @@ export async function createBackup(): Promise<BackupData> {
   } catch (error) {
     console.error("Error creating backup:", error);
     throw new Error(
-      `Erreur lors de la création du backup: ${
-        error instanceof Error ? error.message : "Erreur inconnue"
+      `Erreur lors de la création du backup: ${error instanceof Error ? error.message : "Erreur inconnue"
       }`
     );
   }
@@ -134,8 +133,7 @@ export async function downloadBackup(): Promise<void> {
   } catch (error) {
     console.error("Error downloading backup:", error);
     toast.error(
-      `Erreur lors du téléchargement: ${
-        error instanceof Error ? error.message : "Erreur inconnue"
+      `Erreur lors du téléchargement: ${error instanceof Error ? error.message : "Erreur inconnue"
       }`
     );
     throw error;
@@ -248,7 +246,7 @@ export async function restoreBackup(
               .select("id")
               .eq("id", cat.id)
               .single();
-            
+
             if (!existing) {
               const { error } = await supabase
                 .from("utility_categories")
@@ -281,7 +279,7 @@ export async function restoreBackup(
               .select("id")
               .eq("id", brand.id)
               .single();
-            
+
             if (!existing) {
               const { error } = await supabase
                 .from("brands")
@@ -320,7 +318,7 @@ export async function restoreBackup(
               .select("id")
               .eq("id", product.id)
               .single();
-            
+
             if (!existing) {
               const { error } = await supabase
                 .from("products")
@@ -343,8 +341,7 @@ export async function restoreBackup(
   } catch (error) {
     console.error("Error restoring backup:", error);
     toast.error(
-      `Erreur lors de la restauration: ${
-        error instanceof Error ? error.message : "Erreur inconnue"
+      `Erreur lors de la restauration: ${error instanceof Error ? error.message : "Erreur inconnue"
       }`
     );
     throw error;
@@ -371,8 +368,7 @@ export function loadBackupFile(file: File): Promise<BackupData> {
       } catch (error) {
         reject(
           new Error(
-            `Erreur lors de la lecture du fichier: ${
-              error instanceof Error ? error.message : "Format invalide"
+            `Erreur lors de la lecture du fichier: ${error instanceof Error ? error.message : "Format invalide"
             }`
           )
         );
@@ -462,8 +458,7 @@ export async function synchronizeData(): Promise<{
   } catch (error) {
     console.error("Error synchronizing data:", error);
     toast.error(
-      `Erreur lors de la synchronisation: ${
-        error instanceof Error ? error.message : "Erreur inconnue"
+      `Erreur lors de la synchronisation: ${error instanceof Error ? error.message : "Erreur inconnue"
       }`
     );
     throw error;

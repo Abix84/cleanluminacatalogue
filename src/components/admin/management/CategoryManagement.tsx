@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
 import { UtilityCategory } from "@/types";
 import {
   Dialog,
@@ -245,13 +245,13 @@ export const CategoryManagement = () => {
                   <TableCell>
                     {category.createdAt
                       ? new Date(category.createdAt).toLocaleDateString(
-                          "fr-FR",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )
+                        "fr-FR",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right">
@@ -346,11 +346,10 @@ export const CategoryManagement = () => {
                         key={color}
                         type="button"
                         onClick={() => setFormData({ ...formData, color })}
-                        className={`w-10 h-10 rounded-md border-2 transition-all hover:scale-110 ${
-                          formData.color === color
+                        className={`w-10 h-10 rounded-md border-2 transition-all hover:scale-110 ${formData.color === color
                             ? "border-gray-900 dark:border-slate-200 ring-2 ring-gray-900 dark:ring-slate-200 ring-offset-2 dark:ring-offset-slate-800"
                             : "border-gray-200 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-400"
-                        }`}
+                          }`}
                         style={{ backgroundColor: color }}
                         disabled={isSubmitting}
                       />

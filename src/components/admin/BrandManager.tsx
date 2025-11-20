@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useBrands } from "@/context/BrandContextUnified";
-import { useProducts } from "@/context/ProductContextUnified";
+import { useBrands } from "@/context/BrandContext";
+import { useProducts } from "@/context/ProductContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

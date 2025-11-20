@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ProductForm from "@/components/admin/ProductForm";
-import { useProducts } from "@/context/ProductContextUnified";
+import { useProducts } from "@/context/ProductContext";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -35,12 +35,12 @@ const EditProduct = () => {
   const handleSubmit = async (data: any) => {
     if (!product) return;
     setIsSaving(true);
-    
+
     const { image_url, ...productData } = data;
     const imageFile = image_url instanceof File ? image_url : undefined;
-    
+
     await updateProduct({ ...product, ...productData }, imageFile);
-    
+
     setIsSaving(false);
     toast.success("Produit mis à jour avec succès !");
     navigate("/admin");
@@ -66,9 +66,9 @@ const EditProduct = () => {
         </Link>
       </Button>
       <h1 className="text-2xl font-bold mb-4">Modifier le produit</h1>
-      <ProductForm 
-        initialData={product} 
-        onSubmit={handleSubmit} 
+      <ProductForm
+        initialData={product}
+        onSubmit={handleSubmit}
         isSaving={isSaving}
         defaultCompany={product.company || undefined}
       />

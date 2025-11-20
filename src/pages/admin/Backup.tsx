@@ -15,10 +15,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Download, Upload, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { downloadBackup, loadBackupFile, restoreBackup, synchronizeData } from "@/lib/backup";
 import { toast } from "sonner";
-import { IS_OFFLINE_MODE } from "@/integrations/supabase/client";
+
 
 const Backup = () => {
-  const isOfflineMode = IS_OFFLINE_MODE;
+  const isOfflineMode = false;
 
   const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -83,7 +83,7 @@ const Backup = () => {
       setIsRestoreDialogOpen(false);
       setSelectedFile(null);
       setBackupInfo(null);
-      
+
       // Rafraîchir la page pour recharger les données
       setTimeout(() => {
         window.location.reload();

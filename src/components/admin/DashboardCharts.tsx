@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { useProducts } from "@/context/ProductContextUnified";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useProducts } from "@/context/ProductContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -102,8 +102,8 @@ export const DashboardCharts = () => {
       .sort((a, b) => b.price - a.price)
       .slice(0, 5)
       .map((product) => ({
-        name: product.name.length > 20 
-          ? product.name.substring(0, 20) + "..." 
+        name: product.name.length > 20
+          ? product.name.substring(0, 20) + "..."
           : product.name,
         price: product.price,
         fullName: product.name,
@@ -134,8 +134,8 @@ export const DashboardCharts = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={categoryData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={100}
@@ -162,8 +162,8 @@ export const DashboardCharts = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={brandData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={100}
@@ -192,7 +192,7 @@ export const DashboardCharts = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number, name: string) => {
                   if (name === "count") return value;
                   return formatPrice(value as number);
@@ -219,15 +219,15 @@ export const DashboardCharts = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={topProductsByValue}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={100}
                 fontSize={10}
               />
               <YAxis />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number) => formatPrice(value)}
                 labelFormatter={(label) => {
                   const product = topProductsByValue.find(p => p.name === label);
@@ -235,10 +235,10 @@ export const DashboardCharts = () => {
                 }}
               />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="price" 
-                stroke="#8884d8" 
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="#8884d8"
                 strokeWidth={2}
                 name="Prix"
                 dot={{ fill: "#8884d8", r: 4 }}
@@ -264,7 +264,7 @@ export const DashboardCharts = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => 
+                label={({ name, percent }) =>
                   `${name}: ${(percent * 100).toFixed(0)}%`
                 }
                 outerRadius={100}
@@ -272,9 +272,9 @@ export const DashboardCharts = () => {
                 dataKey="value"
               >
                 {imageStats.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={index === 0 ? "#82ca9d" : "#ffc658"} 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={index === 0 ? "#82ca9d" : "#ffc658"}
                   />
                 ))}
               </Pie>

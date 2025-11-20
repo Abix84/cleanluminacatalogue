@@ -19,8 +19,8 @@ import { Separator } from "@/components/ui/separator";
 import { AspectRatio } from "./ui/aspect-ratio";
 import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/utils";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import {
   Eye,
   ShoppingCart,

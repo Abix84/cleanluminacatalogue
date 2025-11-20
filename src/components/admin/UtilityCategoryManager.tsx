@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useProducts } from "@/context/ProductContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useProducts } from "@/context/ProductContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

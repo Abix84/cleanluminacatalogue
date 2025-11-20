@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase, IS_OFFLINE_MODE } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Product, ProductFormData, PaginatedResponse, PaginationParams } from "@/types";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { localStorageProducts, localStorageImages } from "@/lib/localStorage";
 
 const BUCKET_NAME = "product-images";
-const isOfflineMode = IS_OFFLINE_MODE;
+const isOfflineMode = false;
 
 // ==========================================
 // QUERY KEYS
@@ -49,7 +49,7 @@ const transformProduct = (item: any): Product => ({
 // ==========================================
 
 const offlineFetchProducts = async (
-  params?: PaginationParams & {
+  params?: Partial<PaginationParams> & {
     search?: string;
     categoryId?: string | null;
     brandId?: string | null;
@@ -98,7 +98,7 @@ const offlineFetchProducts = async (
 // ==========================================
 
 const onlineFetchProducts = async (
-  params?: PaginationParams & {
+  params?: Partial<PaginationParams> & {
     search?: string;
     categoryId?: string | null;
     brandId?: string | null;

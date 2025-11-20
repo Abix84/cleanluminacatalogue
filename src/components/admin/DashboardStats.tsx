@@ -1,6 +1,6 @@
-import { useProducts } from "@/context/ProductContextUnified";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useProducts } from "@/context/ProductContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Shapes, DollarSign, Tag } from "lucide-react";
 import { formatPrice } from "@/lib/utils";

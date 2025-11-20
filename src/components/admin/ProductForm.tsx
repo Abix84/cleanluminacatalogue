@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { useEffect, useState, useRef } from "react";
 import {
   Upload,
@@ -89,17 +89,17 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: Produc
 
   // Filtrer les marques selon l'entreprise sélectionnée
   const selectedCompany = form.watch("company");
-  const availableBrands = selectedCompany 
+  const availableBrands = selectedCompany
     ? brands.filter((brand) => {
-        if (selectedCompany === "Lumina Distribution") {
-          // Lumina Distribution : seulement "Force Xpress"
-          return brand.name === "Force Xpress";
-        } else if (selectedCompany === "CleanExpress") {
-          // CleanExpress : toutes les marques sauf "Force Xpress"
-          return brand.name !== "Force Xpress";
-        }
-        return true;
-      })
+      if (selectedCompany === "Lumina Distribution") {
+        // Lumina Distribution : seulement "Force Xpress"
+        return brand.name === "Force Xpress";
+      } else if (selectedCompany === "CleanExpress") {
+        // CleanExpress : toutes les marques sauf "Force Xpress"
+        return brand.name !== "Force Xpress";
+      }
+      return true;
+    })
     : brands;
 
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -342,7 +342,7 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: Produc
                     />
                   </FormControl>
                   <FormDescription>
-                    {defaultCompany 
+                    {defaultCompany
                       ? `Entreprise sélectionnée : ${defaultCompany}`
                       : "Sélectionnez l'entreprise propriétaire de ce produit"}
                   </FormDescription>
@@ -365,7 +365,7 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: Produc
                         label: brand.name,
                       }))}
                       placeholder={
-                        selectedCompany 
+                        selectedCompany
                           ? `Sélectionnez une marque ${selectedCompany === "Lumina Distribution" ? "(Force Xpress uniquement)" : "(toutes sauf Force Xpress)"}`
                           : "Sélectionnez d'abord une entreprise"
                       }
@@ -379,11 +379,11 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: Produc
                     />
                   </FormControl>
                   <FormDescription>
-                    {selectedCompany === "Lumina Distribution" 
+                    {selectedCompany === "Lumina Distribution"
                       ? "Marques disponibles : Force Xpress uniquement"
                       : selectedCompany === "CleanExpress"
-                      ? "Marques disponibles : toutes les marques sauf Force Xpress"
-                      : "Sélectionnez d'abord une entreprise pour voir les marques disponibles"}
+                        ? "Marques disponibles : toutes les marques sauf Force Xpress"
+                        : "Sélectionnez d'abord une entreprise pour voir les marques disponibles"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

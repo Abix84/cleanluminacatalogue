@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useBrands } from "@/context/BrandContext";
 import { Brand } from "@/types";
 import {
   Dialog,

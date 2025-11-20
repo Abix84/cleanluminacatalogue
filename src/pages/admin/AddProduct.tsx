@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductForm from "@/components/admin/ProductForm";
-import { useProducts } from "@/context/ProductContextUnified";
+import { useProducts } from "@/context/ProductContext";
 import { useAuth } from "@/context/AuthContext";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -65,7 +65,7 @@ const AddProduct = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 max-w-2xl">
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col h-full"
             onClick={() => setSelectedCompany("CleanExpress")}
           >
@@ -85,7 +85,7 @@ const AddProduct = () => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow flex flex-col h-full"
             onClick={() => setSelectedCompany("Lumina Distribution")}
           >
@@ -119,22 +119,22 @@ const AddProduct = () => {
             Entreprise : <span className="font-semibold">{selectedCompany}</span>
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setSelectedCompany(null)}
         >
           Changer d'entreprise
         </Button>
       </div>
-      <ProductForm 
+      <ProductForm
         key={formKey} // Réinitialise le formulaire quand la clé change
-        onSubmit={handleSubmit} 
+        onSubmit={handleSubmit}
         isSaving={isSaving}
         defaultCompany={selectedCompany}
       />
       <div className="flex gap-2 mt-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => navigate("/admin")}
         >
           Retour à l'administration

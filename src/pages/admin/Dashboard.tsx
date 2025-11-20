@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useProducts } from "@/context/ProductContextUnified";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useProducts } from "@/context/ProductContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { useAuth } from "@/context/AuthContext";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import VendeurProfile from "@/components/admin/VendeurProfile";
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
   const { isAdmin, isVendeur } = useAuth();
   const navigate = useNavigate();
   const isOfflineMode = import.meta.env.VITE_OFFLINE_MODE === "true";
-  
+
   // En mode offline ou si admin, toutes les actions sont autorisées
   const canEdit = isOfflineMode || isAdmin;
 
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
     try {
       const data = {
         products,
-        utilityCategories,
+        categories: utilityCategories,
         brands,
       };
       exportToJSON(data, "cleanexpress_backup");

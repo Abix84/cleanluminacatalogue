@@ -21,9 +21,9 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { PackageSearch } from "lucide-react";
-import { useProducts } from "@/context/ProductContextUnified";
-import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
-import { useBrands } from "@/context/BrandContextUnified";
+import { useProducts } from "@/context/ProductContext";
+import { useUtilityCategories } from "@/context/UtilityCategoryContext";
+import { useBrands } from "@/context/BrandContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Product, ProductFilters } from "@/types";
 
