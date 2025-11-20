@@ -75,11 +75,34 @@ const onlineDeleteBrand = async (brandId: string): Promise<void> => {
 };
 
 // ==========================================
+// HELPER FUNCTION FOR SYNC INITIALIZATION
+// ==========================================
+
+/**
+ * Synchronously loads brands from localStorage for initial state
+ */
+const getInitialBrands = (): Brand[] => {
+  if (!isOfflineMode) return [];
+
+  try {
+    const stored = localStorage.getItem('cleanexpress_brands');
+    if (!stored) return [];
+
+    const brands = JSON.parse(stored) as Brand[];
+    return brands.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error('Error reading initial brands from localStorage:', error);
+    return [];
+  }
+};
+
+// ==========================================
 // PROVIDER COMPONENT
 // ==========================================
 
 export const BrandProvider = ({ children }: { children: ReactNode }) => {
-  const [brands, setBrands] = useState<Brand[]>([]);
+  // Initialize with data from localStorage if offline mode
+  const [brands, setBrands] = useState<Brand[]>(getInitialBrands());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -130,6 +153,18 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchBrands();
+
+    // Écouter l'événement de synchronisation
+    const handleDataSynced = () => {
+      console.log('Data synced event received - refreshing brands');
+      fetchBrands();
+    };
+
+    window.addEventListener('data-synced', handleDataSynced);
+
+    return () => {
+      window.removeEventListener('data-synced', handleDataSynced);
+    };
   }, []);
 
   /**

@@ -98,6 +98,28 @@ const onlineDeleteCategory = async (categoryId: string): Promise<void> => {
 };
 
 // ==========================================
+// HELPER FUNCTION FOR SYNC INITIALIZATION
+// ==========================================
+
+/**
+ * Synchronously loads categories from localStorage for initial state
+ */
+const getInitialCategories = (): UtilityCategory[] => {
+  if (!isOfflineMode) return [];
+
+  try {
+    const stored = localStorage.getItem('cleanexpress_categories');
+    if (!stored) return [];
+
+    const categories = JSON.parse(stored) as UtilityCategory[];
+    return categories.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error('Error reading initial categories from localStorage:', error);
+    return [];
+  }
+};
+
+// ==========================================
 // PROVIDER COMPONENT
 // ==========================================
 
@@ -106,9 +128,10 @@ export const UtilityCategoryProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  // Initialize with data from localStorage if offline mode
   const [utilityCategories, setUtilityCategories] = useState<
     UtilityCategory[]
-  >([]);
+  >(getInitialCategories());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -162,6 +185,18 @@ export const UtilityCategoryProvider = ({
 
   useEffect(() => {
     fetchCategories();
+
+    // Écouter l'événement de synchronisation
+    const handleDataSynced = () => {
+      console.log('Data synced event received - refreshing categories');
+      fetchCategories();
+    };
+
+    window.addEventListener('data-synced', handleDataSynced);
+
+    return () => {
+      window.removeEventListener('data-synced', handleDataSynced);
+    };
   }, []);
 
   /**

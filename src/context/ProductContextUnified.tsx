@@ -113,19 +113,19 @@ const sanitizeFileName = (fileName: string): string => {
   const extension = fileName.split('.').pop()?.toLowerCase() || '';
   // Récupérer le nom sans extension
   const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
-  
+
   // Normaliser les caractères accentués (é -> e, etc.)
   const normalized = nameWithoutExt
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
-  
+
   // Remplacer les espaces et caractères spéciaux par des tirets
   // Garder seulement les caractères alphanumériques, tirets et underscores
   const sanitized = normalized
     .replace(/[^a-zA-Z0-9_-]/g, '-')
     .replace(/-+/g, '-') // Remplacer les tirets multiples par un seul
     .replace(/^-|-$/g, ''); // Supprimer les tirets en début et fin
-  
+
   return `${sanitized}.${extension}`;
 };
 
@@ -266,11 +266,35 @@ const onlineDeleteProduct = async (
 };
 
 // ==========================================
+// HELPER FUNCTION FOR SYNC INITIALIZATION
+// ==========================================
+
+/**
+ * Synchronously loads products from localStorage for initial state
+ * This prevents the race condition where useEffect runs before data is written
+ */
+const getInitialProducts = (): Product[] => {
+  if (!isOfflineMode) return [];
+
+  try {
+    const stored = localStorage.getItem('cleanexpress_products');
+    if (!stored) return [];
+
+    const products = JSON.parse(stored) as Product[];
+    return products.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error('Error reading initial products from localStorage:', error);
+    return [];
+  }
+};
+
+// ==========================================
 // PROVIDER COMPONENT
 // ==========================================
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  // Initialize with data from localStorage if offline mode
+  const [products, setProducts] = useState<Product[]>(getInitialProducts());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
@@ -329,6 +353,18 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchProducts();
+
+    // Écouter l'événement de synchronisation
+    const handleDataSynced = () => {
+      console.log('Data synced event received - refreshing products');
+      fetchProducts();
+    };
+
+    window.addEventListener('data-synced', handleDataSynced);
+
+    return () => {
+      window.removeEventListener('data-synced', handleDataSynced);
+    };
   }, []);
 
   /**

@@ -23,7 +23,7 @@ const STORAGE_KEYS = {
 const CURRENT_VERSION = "1.1.0";
 
 // Délai de simulation (pour simuler une vraie API)
-const SIMULATE_DELAY = 100; // ms
+const SIMULATE_DELAY = 0; // Pas de délai en mode offline - fix pour chargement initial
 
 // ==========================================
 // TYPES
@@ -242,6 +242,7 @@ const generateDemoData = (): void => {
       image_url: null,
       utilityCategoryId: demoCategories[0].id,
       brandId: demoBrands[0].id,
+      company: "CleanExpress",
     },
     {
       id: uuidv4(),
@@ -251,6 +252,7 @@ const generateDemoData = (): void => {
       image_url: null,
       utilityCategoryId: demoCategories[1].id,
       brandId: demoBrands[1].id,
+      company: "CleanExpress",
     },
     {
       id: uuidv4(),
@@ -260,6 +262,7 @@ const generateDemoData = (): void => {
       image_url: null,
       utilityCategoryId: demoCategories[2].id,
       brandId: demoBrands[2].id,
+      company: "CleanExpress",
     },
     {
       id: uuidv4(),
@@ -269,6 +272,7 @@ const generateDemoData = (): void => {
       image_url: null,
       utilityCategoryId: demoCategories[7].id,
       brandId: demoBrands[3].id,
+      company: "Lumina Distribution",
     },
     {
       id: uuidv4(),
@@ -278,6 +282,7 @@ const generateDemoData = (): void => {
       image_url: null,
       utilityCategoryId: demoCategories[13].id,
       brandId: demoBrands[4].id,
+      company: "Lumina Distribution",
     },
   ];
 
