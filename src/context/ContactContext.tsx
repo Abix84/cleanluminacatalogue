@@ -57,7 +57,8 @@ const fetchOnlineContactInfo = async (): Promise<ContactInfo | null> => {
   const { data, error } = await supabase
     .from("contact_info")
     .select("*")
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -216,7 +217,7 @@ export const ContactProvider = ({ children }: { children: ReactNode }) => {
       toast.success("Informations de contact mises à jour avec succès !");
     } catch (err: any) {
       let errorMessage = "Erreur lors de la mise à jour des informations de contact.";
-      
+
       if (err) {
         // Gérer les erreurs Supabase spécifiques
         if (err.code === "42P01" || err.code === "PGRST205") {

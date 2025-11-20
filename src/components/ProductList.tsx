@@ -53,7 +53,7 @@ const ProductList = ({
   advancedFilters: externalAdvancedFilters,
   onAdvancedFiltersChange,
 }: ProductListProps) => {
-  const { products: contextProducts } = useProducts();
+  const { products: contextProducts, loading: contextLoading } = useProducts();
   // Utiliser les produits fournis en prop, sinon utiliser ceux du contexte
   const allProducts = providedProducts ?? contextProducts;
   const { utilityCategories } = useUtilityCategories();
@@ -209,6 +209,9 @@ const ProductList = ({
     },
   };
 
+  // Combine local loading state (for filtering/sorting) with context loading state (for data fetching)
+  const isLoading = loading || (contextLoading && allProducts.length === 0);
+
   return (
     <>
       {/* Advanced Filters - Hidden if hideFilters is true or if filters are managed externally */}
@@ -333,7 +336,7 @@ const ProductList = ({
         </motion.div>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <ProductSkeleton count={itemsPerPage} />
       ) : (
         <>
@@ -348,11 +351,11 @@ const ProductList = ({
                 <PackageSearch className="h-16 w-16 text-muted-foreground" />
               </div>
               <h3 className="text-2xl font-bold mb-2">
-                {allProducts.length === 0 ? "Chargement initial..." : "Aucun produit trouvé"}
+                {allProducts.length === 0 ? "Aucun produit disponible" : "Aucun produit trouvé"}
               </h3>
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
                 {allProducts.length === 0
-                  ? "Les données sont en cours de chargement. Si ce message persiste, veuillez recharger la page."
+                  ? "Le catalogue est actuellement vide."
                   : "Essayez de modifier vos filtres ou votre recherche pour découvrir notre gamme de produits."}
               </p>
               {allProducts.length === 0 && (
