@@ -256,7 +256,6 @@ const ProductCard = memo(({
               <Separator className="my-3" />
 
               {/* Price and Availability */}
-              {/* Price and Availability */}
               <div className="flex flex-col gap-3 mt-auto">
                 {isAdmin && (
                   <div className="w-full">

@@ -194,10 +194,10 @@ export const BrandManagement = () => {
                   <TableCell>
                     {brand.createdAt
                       ? new Date(brand.createdAt).toLocaleDateString("fr-FR", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right">

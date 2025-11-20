@@ -17,7 +17,7 @@ export const useCompanyTheme = () => {
         return "CleanExpress";
       }
     }
-    
+
     // Sinon, vérifier le pathname
     return getCompanyFromUrl(location.pathname);
   }, [brandName, location.pathname]);

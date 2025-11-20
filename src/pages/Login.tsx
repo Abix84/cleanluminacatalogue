@@ -14,15 +14,15 @@ const Login = () => {
     // Écouter les changements d'état d'authentification
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[Login] Auth state change:', event, session?.user?.email);
-      
+
       if (event === 'SIGNED_IN' && session) {
         console.log('[Login] User signed in:', session.user.email);
         toast.success('Connexion réussie !');
         // Naviguer vers la page d'accueil après la connexion
         // Utiliser un petit délai pour s'assurer que le contexte est mis à jour
         setTimeout(() => {
-          console.log('[Login] Navigating to / after sign in');
-          navigate('/', { replace: true });
+          console.log('[Login] Navigating to /admin after sign in');
+          navigate('/admin', { replace: true });
         }, 100);
       } else if (event === 'SIGNED_OUT') {
         console.log('[Login] User signed out');
@@ -41,27 +41,27 @@ const Login = () => {
   useEffect(() => {
     // Si on a une session et que le chargement est terminé, naviguer vers la page d'accueil
     if (session && !loading) {
-      console.log('[Login] Session exists, navigating to /');
-      console.log('[Login] Session details:', { 
-        user: session.user?.email, 
-        loading 
+      console.log('[Login] Session exists, navigating to /admin');
+      console.log('[Login] Session details:', {
+        user: session.user?.email,
+        loading
       });
-      navigate('/', { replace: true });
+      navigate('/admin', { replace: true });
     }
   }, [session, loading, navigate]);
 
   // Si on a une session, rediriger immédiatement vers la page d'accueil
   if (session && !loading) {
-    console.log('[Login] Redirecting to / (session exists)');
-    return <Navigate to="/" replace />;
+    console.log('[Login] Redirecting to /admin (session exists)');
+    return <Navigate to="/admin" replace />;
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
         <div className="text-center">
-            <img src="/logo.png" alt="CleanExpress Logo" className="mx-auto h-16 w-auto block dark:hidden" />
-            <img src="/logo_darkmode.png" alt="CleanExpress Logo" className="mx-auto h-16 w-auto hidden dark:block" />
+          <img src="/logo.png" alt="CleanExpress Logo" className="mx-auto h-16 w-auto block dark:hidden" />
+          <img src="/logo_darkmode.png" alt="CleanExpress Logo" className="mx-auto h-16 w-auto hidden dark:block" />
           <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">
             Espace Administrateur
           </h2>

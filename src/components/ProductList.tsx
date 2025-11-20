@@ -37,6 +37,7 @@ type SortOption =
 interface ProductListProps {
   searchQuery?: string;
   categoryFilter?: string | null;
+  brandFilter?: string | null;
   hideFilters?: boolean;
   products?: Product[]; // Produits pré-filtrés (optionnel)
   advancedFilters?: ProductFilters; // Filtres avancés depuis le parent
@@ -46,6 +47,7 @@ interface ProductListProps {
 const ProductList = ({
   searchQuery = "",
   categoryFilter = null,
+  brandFilter = null,
   hideFilters = false,
   products: providedProducts,
   advancedFilters: externalAdvancedFilters,
@@ -74,11 +76,12 @@ const ProductList = ({
   // Use external filters if provided, otherwise use local state
   const effectiveSearchTerm = searchQuery || localSearchTerm || advancedFilters.searchTerm || "";
   const effectiveCategoryFilter =
-    categoryFilter || 
-    advancedFilters.categoryId || 
+    categoryFilter ||
+    advancedFilters.categoryId ||
     (selectedCategory === "all" ? null : selectedCategory);
-  const effectiveBrandFilter = 
-    advancedFilters.brandId || 
+  const effectiveBrandFilter =
+    brandFilter ||
+    advancedFilters.brandId ||
     (selectedBrand === "all" ? null : selectedBrand);
   const effectiveSortOption = advancedFilters.sortBy || sortOption;
 
@@ -86,22 +89,22 @@ const ProductList = ({
     const filtered = allProducts.filter((product) => {
       // Recherche
       const searchTermLower = effectiveSearchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         product.name.toLowerCase().includes(searchTermLower) ||
         product.description?.toLowerCase().includes(searchTermLower) ||
         brands.find(b => b.id === product.brandId)?.name.toLowerCase().includes(searchTermLower) ||
         utilityCategories.find(c => c.id === product.utilityCategoryId)?.name.toLowerCase().includes(searchTermLower);
-      
+
       // Catégorie
       const matchesCategory =
         !effectiveCategoryFilter ||
         product.utilityCategoryId === effectiveCategoryFilter;
-      
+
       // Marque
       const matchesBrand =
         !effectiveBrandFilter ||
         product.brandId === effectiveBrandFilter;
-      
+
       // Prix
       const matchesMinPrice =
         !advancedFilters.minPrice || product.price >= advancedFilters.minPrice;
@@ -352,12 +355,12 @@ const ProductList = ({
             </motion.div>
           ) : (
             <>
-                      <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-4"
-                      >
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-4"
+              >
                 {paginatedProducts.map((product, index) => (
                   <ProductCard
                     key={product.id}
@@ -370,17 +373,17 @@ const ProductList = ({
                 ))}
               </motion.div>
 
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-6 sm:mt-8">
-                          <div className="text-xs sm:text-sm text-muted-foreground">
-                            <span className="hidden sm:inline">Affichage de </span>
-                            <span className="sm:hidden">{startIndex + 1}-{Math.min(endIndex, filteredAndSortedProducts.length)} / </span>
-                            {startIndex + 1} à {Math.min(endIndex, filteredAndSortedProducts.length)} 
-                            <span className="hidden sm:inline"> sur </span>
-                            <span className="sm:hidden"> / </span>
-                            {filteredAndSortedProducts.length} produit{filteredAndSortedProducts.length > 1 ? "s" : ""}
-                          </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-6 sm:mt-8">
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="hidden sm:inline">Affichage de </span>
+                    <span className="sm:hidden">{startIndex + 1}-{Math.min(endIndex, filteredAndSortedProducts.length)} / </span>
+                    {startIndex + 1} à {Math.min(endIndex, filteredAndSortedProducts.length)}
+                    <span className="hidden sm:inline"> sur </span>
+                    <span className="sm:hidden"> / </span>
+                    {filteredAndSortedProducts.length} produit{filteredAndSortedProducts.length > 1 ? "s" : ""}
+                  </div>
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -393,7 +396,7 @@ const ProductList = ({
                           className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
-                      
+
                       {getPageNumbers().map((page, index) => (
                         <PaginationItem key={index}>
                           {page === "ellipsis" ? (
@@ -412,7 +415,7 @@ const ProductList = ({
                           )}
                         </PaginationItem>
                       ))}
-                      
+
                       <PaginationItem>
                         <PaginationNext
                           href="#"
