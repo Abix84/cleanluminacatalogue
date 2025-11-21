@@ -224,14 +224,30 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
 
     const files = e.dataTransfer.files;
     if (files && files[0]) {
-      form.setValue("image_url", files[0]);
+      const file = files[0];
+      form.setValue("image_url", file);
+
+      // Auto-fill name if empty
+      const currentName = form.getValues("name");
+      if (!currentName) {
+        const fileName = file.name.split('.').slice(0, -1).join('.');
+        form.setValue("name", fileName);
+      }
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files[0]) {
-      form.setValue("image_url", files[0]);
+      const file = files[0];
+      form.setValue("image_url", file);
+
+      // Auto-fill name if empty
+      const currentName = form.getValues("name");
+      if (!currentName) {
+        const fileName = file.name.split('.').slice(0, -1).join('.');
+        form.setValue("name", fileName);
+      }
     }
   };
 
