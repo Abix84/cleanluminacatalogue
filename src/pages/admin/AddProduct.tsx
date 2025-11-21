@@ -25,6 +25,8 @@ const AddProduct = () => {
   const [selectedCompany, setSelectedCompany] = useState<"CleanExpress" | "Lumina Distribution" | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [formKey, setFormKey] = useState(0); // Clé pour forcer la réinitialisation du formulaire
+  const [lastBrandId, setLastBrandId] = useState<string | null>(null);
+  const [lastUtilityCategoryId, setLastUtilityCategoryId] = useState<string | null>(null);
 
   // Vérifier les permissions
   if (!isOfflineMode && !isAdmin) {
@@ -43,6 +45,11 @@ const AddProduct = () => {
     try {
       setIsSaving(true);
       await addProduct(data);
+
+      // Sauvegarder la marque et la catégorie pour le prochain ajout
+      if (data.brandId) setLastBrandId(data.brandId);
+      if (data.utilityCategoryId) setLastUtilityCategoryId(data.utilityCategoryId);
+
       setIsSaving(false);
       // Le toast.success est déjà affiché dans addProduct
       // Réinitialiser le formulaire en changeant la clé pour permettre l'ajout d'un autre produit
@@ -131,6 +138,8 @@ const AddProduct = () => {
         onSubmit={handleSubmit}
         isSaving={isSaving}
         defaultCompany={selectedCompany}
+        defaultBrandId={lastBrandId}
+        defaultUtilityCategoryId={lastUtilityCategoryId}
       />
       <div className="flex gap-2 mt-4">
         <Button

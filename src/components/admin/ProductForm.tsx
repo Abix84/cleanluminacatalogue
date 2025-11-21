@@ -52,6 +52,8 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormValues) => void;
   isSaving: boolean;
   defaultCompany?: "CleanExpress" | "Lumina Distribution";
+  defaultBrandId?: string | null;
+  defaultUtilityCategoryId?: string | null;
 }
 
 // Max file size: 5MB
@@ -63,7 +65,7 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
-const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: ProductFormProps) => {
+const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultBrandId, defaultUtilityCategoryId }: ProductFormProps) => {
   const { utilityCategories } = useUtilityCategories();
   const { brands } = useBrands();
   const form = useForm<ProductFormValues>({
@@ -80,8 +82,8 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany }: Produc
       name: "",
       description: "",
       price: 0,
-      utilityCategoryId: null,
-      brandId: null,
+      utilityCategoryId: defaultUtilityCategoryId || null,
+      brandId: defaultBrandId || null,
       company: defaultCompany || undefined,
       image_url: null,
     },
