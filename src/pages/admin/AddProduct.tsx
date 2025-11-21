@@ -140,15 +140,8 @@ const AddProduct = () => {
         defaultCompany={selectedCompany}
         defaultBrandId={lastBrandId}
         defaultUtilityCategoryId={lastUtilityCategoryId}
+        onBack={() => navigate("/admin")}
       />
-      <div className="flex gap-2 mt-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/admin")}
-        >
-          Retour à l'administration
-        </Button>
-      </div>
     </div>
   );
 };

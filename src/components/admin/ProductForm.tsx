@@ -54,6 +54,7 @@ interface ProductFormProps {
   defaultCompany?: "CleanExpress" | "Lumina Distribution";
   defaultBrandId?: string | null;
   defaultUtilityCategoryId?: string | null;
+  onBack?: () => void;
 }
 
 // Max file size: 5MB
@@ -65,7 +66,7 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
-const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultBrandId, defaultUtilityCategoryId }: ProductFormProps) => {
+const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultBrandId, defaultUtilityCategoryId, onBack }: ProductFormProps) => {
   const { utilityCategories } = useUtilityCategories();
   const { brands } = useBrands();
   const form = useForm<ProductFormValues>({
@@ -266,157 +267,174 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Détails du produit</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nom du produit" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Description du produit"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prix</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="company"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Entreprise <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <SearchableSelect
-                      value={field.value ?? undefined}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        // Réinitialiser la marque si l'entreprise change
-                        form.setValue("brandId", null);
-                      }}
-                      options={[
-                        { value: "CleanExpress", label: "CleanExpress" },
-                        { value: "Lumina Distribution", label: "Lumina Distribution" },
-                      ]}
-                      placeholder="Sélectionnez une entreprise"
-                      searchPlaceholder="Rechercher une entreprise..."
-                      emptyText="Aucune entreprise trouvée."
-                      disabled={!!defaultCompany}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {defaultCompany
-                      ? `Entreprise sélectionnée : ${defaultCompany}`
-                      : "Sélectionnez l'entreprise propriétaire de ce produit"}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="brandId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Marque</FormLabel>
-                  <FormControl>
-                    <SearchableSelect
-                      value={field.value ?? undefined}
-                      onValueChange={field.onChange}
-                      options={availableBrands.map((brand) => ({
-                        value: brand.id,
-                        label: brand.name,
-                      }))}
-                      placeholder={
-                        selectedCompany
-                          ? `Sélectionnez une marque ${selectedCompany === "Lumina Distribution" ? "(Force Xpress uniquement)" : "(toutes sauf Force Xpress)"}`
-                          : "Sélectionnez d'abord une entreprise"
-                      }
-                      searchPlaceholder="Rechercher une marque..."
-                      emptyText={
-                        selectedCompany
-                          ? `Aucune marque disponible pour ${selectedCompany}`
-                          : "Sélectionnez d'abord une entreprise"
-                      }
-                      disabled={!selectedCompany}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {selectedCompany === "Lumina Distribution"
-                      ? "Marques disponibles : Force Xpress uniquement"
-                      : selectedCompany === "CleanExpress"
-                        ? "Marques disponibles : toutes les marques sauf Force Xpress"
-                        : "Sélectionnez d'abord une entreprise pour voir les marques disponibles"}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="utilityCategoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Catégorie d'utilité</FormLabel>
-                  <FormControl>
-                    <SearchableSelect
-                      value={field.value ?? undefined}
-                      onValueChange={field.onChange}
-                      options={utilityCategories.map((cat) => ({
-                        value: cat.id,
-                        label: cat.name,
-                        color: cat.color,
-                      }))}
-                      placeholder="Sélectionnez une catégorie"
-                      searchPlaceholder="Rechercher une catégorie..."
-                      emptyText="Aucune catégorie trouvée."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Section Photo du Produit */}
-            <Card className="border-2 border-dashed">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Colonne Gauche : Champs du formulaire */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <Card className="flex-1 flex flex-col">
+              <CardHeader>
+                <CardTitle>Détails du produit</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Nom */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom du produit</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Nettoyant Multi-surfaces" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Description */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Description détaillée du produit..."
+                          className="min-h-[100px]"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Ligne : Entreprise & Marque */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Entreprise <span className="text-red-500">*</span></FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            value={field.value ?? undefined}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              form.setValue("brandId", null);
+                            }}
+                            options={[
+                              { value: "CleanExpress", label: "CleanExpress" },
+                              { value: "Lumina Distribution", label: "Lumina Distribution" },
+                            ]}
+                            placeholder="Sélectionnez une entreprise"
+                            searchPlaceholder="Rechercher..."
+                            emptyText="Aucune entreprise trouvée."
+                            disabled={!!defaultCompany}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marque</FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            value={field.value ?? undefined}
+                            onValueChange={field.onChange}
+                            options={availableBrands.map((brand) => ({
+                              value: brand.id,
+                              label: brand.name,
+                            }))}
+                            placeholder={
+                              selectedCompany
+                                ? "Sélectionnez une marque"
+                                : "Sélectionnez d'abord une entreprise"
+                            }
+                            searchPlaceholder="Rechercher..."
+                            emptyText="Aucune marque trouvée."
+                            disabled={!selectedCompany}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Ligne : Catégorie & Prix */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="utilityCategoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Catégorie</FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            value={field.value ?? undefined}
+                            onValueChange={field.onChange}
+                            options={utilityCategories.map((cat) => ({
+                              value: cat.id,
+                              label: cat.name,
+                              color: cat.color,
+                            }))}
+                            placeholder="Sélectionnez une catégorie"
+                            searchPlaceholder="Rechercher..."
+                            emptyText="Aucune catégorie trouvée."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prix</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              className="pl-12"
+                              {...field}
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                              DZD
+                            </span>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end mt-auto">
+              <Button type="submit" disabled={isSaving} size="lg" className="w-full md:w-auto">
+                {isSaving ? "Enregistrement..." : "Enregistrer le produit"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Colonne Droite : Image */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <Card className="border-2 border-dashed flex-1 flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ImageIcon className="h-5 w-5" />
@@ -432,10 +450,10 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                       {/* Zone de drag & drop / Preview */}
                       <div
                         className={cn(
-                          "relative rounded-lg border-2 border-dashed transition-all",
+                          "relative rounded-lg border-2 border-dashed transition-all aspect-square flex flex-col items-center justify-center max-w-[300px] mx-auto",
                           isDragging && "border-primary bg-primary/5 scale-105",
                           !isDragging && "border-muted-foreground/25",
-                          imagePreview && "border-solid",
+                          imagePreview && "border-solid p-0",
                         )}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
@@ -443,11 +461,11 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                       >
                         {imagePreview ? (
                           // Preview de l'image
-                          <div className="relative group">
+                          <div className="relative group w-full h-full">
                             <img
                               src={imagePreview}
                               alt="Aperçu"
-                              className="w-full h-auto rounded-lg object-cover max-h-[400px]"
+                              className="w-full h-full rounded-lg object-cover"
                             />
                             {/* Overlay au hover */}
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
@@ -486,7 +504,7 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                         ) : (
                           // Zone de drop
                           <div
-                            className="flex flex-col items-center justify-center py-16 px-4 cursor-pointer"
+                            className="flex flex-col items-center justify-center p-4 cursor-pointer text-center w-full h-full"
                             onClick={openFilePicker}
                           >
                             <div
@@ -536,9 +554,8 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                         </Alert>
                       )}
 
-                      <FormDescription>
-                        Recommandé : 800x800px, format JPEG, moins de 200KB pour
-                        de meilleures performances
+                      <FormDescription className="text-center">
+                        Recommandé : 800x800px, format JPEG
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -549,41 +566,35 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                 <div className="rounded-lg bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/10 p-4 space-y-2">
                   <p className="text-sm font-semibold flex items-center gap-2">
                     <span className="text-lg">✨</span>
-                    Conseils pour une belle photo
+                    Conseils
                   </p>
                   <ul className="text-xs text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>
-                        Les images sont automatiquement redimensionnées à
-                        1000×1000px
-                      </span>
+                      <span>Redimensionnement auto 1000px</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>
-                        Utilisez l'éditeur pour zoomer et centrer le produit
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">•</span>
-                      <span>
-                        Appliquez un fond blanc pour un rendu professionnel
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary">•</span>
-                      <span>Produit bien éclairé et net</span>
+                      <span>Fond blanc recommandé</span>
                     </li>
                   </ul>
                 </div>
               </CardContent>
             </Card>
-          </CardContent>
-        </Card>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Enregistrement..." : "Enregistrer"}
-        </Button>
+
+            {/* Bouton Retour (Aligné à gauche) */}
+            {onBack && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                className="w-full mt-auto"
+              >
+                Retour à l'administration
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Éditeur d'images */}
         {imageToEdit && (
