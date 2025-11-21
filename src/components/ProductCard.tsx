@@ -162,7 +162,7 @@ const ProductCard = memo(({
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="gap-2 shadow-lg bg-white/90 hover:bg-white text-foreground backdrop-blur-md border border-white/20"
+                      className="gap-2 shadow-lg bg-white/90 hover:bg-white text-black backdrop-blur-md border border-white/20"
                       onClick={handleQuickView}
                     >
                       <Eye className="h-4 w-4" />
