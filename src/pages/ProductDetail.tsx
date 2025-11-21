@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Product } from "@/types";
 import { ProductDetailSkeleton } from "@/components/ProductSkeleton";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { getProductById } = useProducts();
   const { getUtilityCategoryById } = useUtilityCategories();
   const { getBrandById } = useBrands();
@@ -67,10 +68,8 @@ const ProductDetail = () => {
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
         <h2 className="mt-4 text-2xl font-bold">Produit non trouvé</h2>
         <p className="mt-2 text-muted-foreground">Le produit que vous cherchez n'existe pas.</p>
-        <Button asChild className="mt-6">
-          <Link to={getBackUrl()}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Retour au catalogue
-          </Link>
+        <Button onClick={() => navigate(-1)} className="mt-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retour au catalogue
         </Button>
       </div>
     );
@@ -80,11 +79,9 @@ const ProductDetail = () => {
     <>
       <div className="container mx-auto py-8 px-4">
         <div className="mb-6">
-          <Button asChild variant="outline" size="sm">
-            <Link to={getBackUrl()}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour au catalogue
-            </Link>
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour au catalogue
           </Button>
         </div>
         <div className="grid md:grid-cols-2 gap-12 items-start">

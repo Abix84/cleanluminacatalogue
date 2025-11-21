@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
 import { ProductSkeleton } from "./ProductSkeleton";
@@ -65,7 +66,20 @@ const ProductList = ({
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // URL Search Params for pagination
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
+  const setCurrentPage = (page: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", page.toString());
+    setSearchParams(newParams);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [internalAdvancedFilters, setInternalAdvancedFilters] = useState<ProductFilters>({});
   const itemsPerPage = 20; // Nombre d'items par page
 
@@ -151,9 +165,35 @@ const ProductList = ({
   const endIndex = startIndex + itemsPerPage;
   const paginatedProducts = filteredAndSortedProducts.slice(startIndex, endIndex);
 
+  // Track previous filters to avoid resetting page on initial mount
+  const prevFiltersRef = useRef({
+    effectiveSearchTerm,
+    effectiveCategoryFilter,
+    effectiveBrandFilter,
+    effectiveSortOption,
+    advancedFilters
+  });
+
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    const prevFilters = prevFiltersRef.current;
+    const hasChanged =
+      prevFilters.effectiveSearchTerm !== effectiveSearchTerm ||
+      prevFilters.effectiveCategoryFilter !== effectiveCategoryFilter ||
+      prevFilters.effectiveBrandFilter !== effectiveBrandFilter ||
+      prevFilters.effectiveSortOption !== effectiveSortOption ||
+      prevFilters.advancedFilters !== advancedFilters;
+
+    if (hasChanged) {
+      setCurrentPage(1);
+      prevFiltersRef.current = {
+        effectiveSearchTerm,
+        effectiveCategoryFilter,
+        effectiveBrandFilter,
+        effectiveSortOption,
+        advancedFilters
+      };
+    }
   }, [effectiveSearchTerm, effectiveCategoryFilter, effectiveBrandFilter, effectiveSortOption, advancedFilters]);
 
   useEffect(() => {
