@@ -32,6 +32,10 @@ export const ProductListItem = ({
     const brand = product.brandId ? getBrandById(product.brandId) : null;
     const isProductFavorite = isFavorite(product.id);
 
+    const isDateValid = !product.saleEndDate || new Date(product.saleEndDate) > new Date();
+    const hasPromotion = product.isOnSale && isDateValid && product.promo_price !== null && product.promo_price !== undefined;
+    const currentPrice = hasPromotion ? product.promo_price! : product.price;
+
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         toggleFavorite(product.id);
@@ -123,9 +127,22 @@ export const ProductListItem = ({
                             {/* Price and Stock */}
                             <div className="flex flex-wrap items-center gap-3 mt-2">
                                 {isAdmin && (
-                                    <div className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
-                                        {formatPrice(product.price)}
+                                    <div className="flex items-baseline gap-2">
+                                        <div className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
+                                            {formatPrice(currentPrice)}
+                                        </div>
+                                        {hasPromotion && (
+                                            <div className="text-sm text-muted-foreground line-through">
+                                                {formatPrice(product.price)}
+                                            </div>
+                                        )}
                                     </div>
+                                )}
+
+                                {hasPromotion && (
+                                    <Badge className="bg-red-600 text-white border-0">
+                                        Promo
+                                    </Badge>
                                 )}
 
                                 <Badge

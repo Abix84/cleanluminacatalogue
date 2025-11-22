@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { useBrands } from "@/context/BrandContextUnified";
@@ -43,6 +44,9 @@ const formSchema = z.object({
     required_error: "Veuillez sélectionner une entreprise",
   }),
   image_url: z.any().optional(),
+  promo_price: z.coerce.number().min(0).optional().nullable(),
+  isOnSale: z.boolean().default(false),
+  saleEndDate: z.string().optional().nullable(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -79,6 +83,9 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
       brandId: initialData.brandId,
       company: initialData.company || undefined,
       image_url: initialData.image_url,
+      promo_price: initialData.promo_price,
+      isOnSale: initialData.isOnSale || false,
+      saleEndDate: initialData.saleEndDate,
     } : {
       name: "",
       description: "",
@@ -87,6 +94,9 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
       brandId: defaultBrandId || null,
       company: defaultCompany || undefined,
       image_url: null,
+      promo_price: null,
+      isOnSale: false,
+      saleEndDate: null,
     },
   });
 
@@ -437,6 +447,78 @@ const ProductForm = ({ initialData, onSubmit, isSaving, defaultCompany, defaultB
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Promotions */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Promotions</h3>
+                    <FormField
+                      control={form.control}
+                      name="isOnSale"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Activer la promotion
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {form.watch("isOnSale") && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                      <FormField
+                        control={form.control}
+                        name="promo_price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Prix promotionnel</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className="pl-12"
+                                  {...field}
+                                  value={field.value ?? ""}
+                                />
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                                  DZD
+                                </span>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="saleEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date de fin (optionnel)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

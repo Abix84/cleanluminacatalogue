@@ -26,6 +26,9 @@ export interface ProductDB {
   utility_category_id: string | null;
   brand_id: string | null;
   company: string | null;
+  promo_price?: number | null;
+  is_on_sale?: boolean;
+  sale_end_date?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -58,6 +61,9 @@ export interface Product {
   utilityCategoryId: string | null;
   brandId: string | null;
   company: "CleanExpress" | "Lumina Distribution" | null;
+  promo_price?: number | null;
+  isOnSale?: boolean;
+  saleEndDate?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -40,6 +40,10 @@ const ProductDetail = () => {
   const category = product?.utilityCategoryId ? getUtilityCategoryById(product.utilityCategoryId) : null;
   const brand = product?.brandId ? getBrandById(product.brandId) : null;
 
+  const isDateValid = !product?.saleEndDate || new Date(product.saleEndDate) > new Date();
+  const hasPromotion = product?.isOnSale && isDateValid && product?.promo_price !== null && product?.promo_price !== undefined;
+  const currentPrice = hasPromotion ? product!.promo_price! : product?.price;
+
   // Déterminer l'URL de retour selon l'entreprise du produit
   const getBackUrl = () => {
     if (!product?.company) return "/";
@@ -108,6 +112,11 @@ const ProductDetail = () => {
                 {brand && (
                   <Badge variant="outline">{brand.name}</Badge>
                 )}
+                {hasPromotion && (
+                  <Badge className="bg-red-600 text-white border-0">
+                    Promo
+                  </Badge>
+                )}
               </div>
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h1>
             </div>
@@ -115,8 +124,15 @@ const ProductDetail = () => {
               {product.description || "Aucune description disponible."}
             </p>
             {isAdmin && (
-              <div className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                {formatPrice(product.price)}
+              <div className="flex items-baseline gap-3">
+                <div className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                  {formatPrice(currentPrice || 0)}
+                </div>
+                {hasPromotion && (
+                  <div className="text-xl text-muted-foreground line-through">
+                    {formatPrice(product.price)}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -57,6 +57,10 @@ const ProductCard = memo(({
     : null;
   const brand = product.brandId ? getBrandById(product.brandId) : null;
 
+  const isDateValid = !product.saleEndDate || new Date(product.saleEndDate) > new Date();
+  const hasPromotion = product.isOnSale && isDateValid && product.promo_price !== null && product.promo_price !== undefined;
+  const currentPrice = hasPromotion ? product.promo_price! : product.price;
+
   const handleImageClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
@@ -177,6 +181,11 @@ const ProductCard = memo(({
 
                 {/* Badges - Smaller and less intrusive */}
                 <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
+                  {hasPromotion && (
+                    <Badge className="text-[10px] px-1.5 py-0.5 bg-red-600 text-white border-0 shadow-md animate-pulse">
+                      Promo
+                    </Badge>
+                  )}
                   {isNew && (
                     <Badge className="text-[10px] px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-md">
                       <Sparkles className="h-2.5 w-2.5 mr-0.5" />
@@ -252,8 +261,15 @@ const ProductCard = memo(({
               <div className="flex flex-col gap-3 mt-auto">
                 {isAdmin && (
                   <div className="w-full">
-                    <div className="text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
-                      {formatPrice(product.price)}
+                    <div className="flex items-baseline gap-2">
+                      <div className="text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-blue-600">
+                        {formatPrice(currentPrice)}
+                      </div>
+                      {hasPromotion && (
+                        <div className="text-sm text-muted-foreground line-through">
+                          {formatPrice(product.price)}
+                        </div>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground font-medium">Prix unitaire HT</p>
                   </div>

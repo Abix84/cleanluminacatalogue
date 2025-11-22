@@ -39,6 +39,9 @@ const offlineAddProduct = async (
         utilityCategoryId: productData.utilityCategoryId,
         brandId: productData.brandId,
         company: productData.company,
+        promo_price: productData.promo_price,
+        isOnSale: productData.isOnSale,
+        saleEndDate: productData.saleEndDate,
     };
 
     const newProduct = await localStorageProducts.create(tempProductData);
@@ -157,6 +160,9 @@ const onlineAddProduct = async (
         utility_category_id: productData.utilityCategoryId,
         brand_id: productData.brandId,
         company: productData.company,
+        promo_price: productData.promo_price,
+        is_on_sale: productData.isOnSale,
+        sale_end_date: productData.saleEndDate,
     };
 
     const { data, error } = await supabase
@@ -176,6 +182,9 @@ const onlineAddProduct = async (
         utilityCategoryId: data.utility_category_id,
         brandId: data.brand_id,
         company: data.company,
+        promo_price: data.promo_price,
+        isOnSale: data.is_on_sale,
+        saleEndDate: data.sale_end_date,
     };
 };
 
@@ -220,6 +229,9 @@ const onlineUpdateProduct = async (
         utility_category_id: updatedProductData.utilityCategoryId,
         brand_id: updatedProductData.brandId,
         company: updatedProductData.company,
+        promo_price: updatedProductData.promo_price,
+        is_on_sale: updatedProductData.isOnSale,
+        sale_end_date: updatedProductData.saleEndDate,
     };
 
     const { data, error } = await supabase
@@ -240,6 +252,9 @@ const onlineUpdateProduct = async (
         utilityCategoryId: data.utility_category_id,
         brandId: data.brand_id,
         company: data.company,
+        promo_price: data.promo_price,
+        isOnSale: data.is_on_sale,
+        saleEndDate: data.sale_end_date,
     };
 };
 
@@ -305,6 +320,9 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
                     utilityCategoryId: item.utility_category_id,
                     brandId: item.brand_id,
                     company: item.company,
+                    promo_price: item.promo_price,
+                    isOnSale: item.is_on_sale,
+                    saleEndDate: item.sale_end_date,
                 }));
             }
 
