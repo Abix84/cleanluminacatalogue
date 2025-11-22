@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useLayoutEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
@@ -47,6 +47,12 @@ interface ProductListProps {
   onAdvancedFiltersChange?: (filters: ProductFilters) => void; // Callback pour mettre à jour les filtres
 }
 
+const STORAGE_KEYS = {
+  SCROLL_Y: "dyad_catalog_scroll_y",
+  DISPLAY_COUNT: "dyad_catalog_display_count",
+  INFINITE_SCROLL: "dyad_catalog_infinite_scroll",
+};
+
 const ProductList = ({
   searchQuery = "",
   categoryFilter = null,
@@ -69,9 +75,17 @@ const ProductList = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Infinite Scroll State
-  const [isInfiniteScroll, setIsInfiniteScroll] = useState(true);
-  const [displayCount, setDisplayCount] = useState(20);
+  // Infinite Scroll State - Initialize from storage if available
+  const [isInfiniteScroll, setIsInfiniteScroll] = useState(() => {
+    const stored = sessionStorage.getItem(STORAGE_KEYS.INFINITE_SCROLL);
+    return stored ? JSON.parse(stored) : true;
+  });
+
+  const [displayCount, setDisplayCount] = useState(() => {
+    const stored = sessionStorage.getItem(STORAGE_KEYS.DISPLAY_COUNT);
+    return stored ? parseInt(stored, 10) : 20;
+  });
+
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // URL Search Params for pagination
@@ -201,6 +215,9 @@ const ProductList = ({
       } else {
         setCurrentPage(1);
       }
+      // Clear stored scroll position on filter change
+      sessionStorage.removeItem(STORAGE_KEYS.SCROLL_Y);
+
       prevFiltersRef.current = {
         effectiveSearchTerm,
         effectiveCategoryFilter,
@@ -210,6 +227,32 @@ const ProductList = ({
       };
     }
   }, [effectiveSearchTerm, effectiveCategoryFilter, effectiveBrandFilter, effectiveSortOption, advancedFilters, isInfiniteScroll]);
+
+  // Restore scroll position on mount if available
+  useLayoutEffect(() => {
+    const storedScrollY = sessionStorage.getItem(STORAGE_KEYS.SCROLL_Y);
+    if (storedScrollY && !loading) {
+      window.scrollTo(0, parseInt(storedScrollY, 10));
+      // Optional: Clear after restoring if you only want it to happen once per "back" navigation
+      // But keeping it might be safer if the user refreshes. 
+      // Let's keep it in storage but maybe clear it if we navigate away? 
+      // Actually, sessionStorage is fine.
+    }
+  }, [loading]);
+
+  // Save state on unmount
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem(STORAGE_KEYS.SCROLL_Y, window.scrollY.toString());
+      sessionStorage.setItem(STORAGE_KEYS.DISPLAY_COUNT, displayCount.toString());
+      sessionStorage.setItem(STORAGE_KEYS.INFINITE_SCROLL, JSON.stringify(isInfiniteScroll));
+    };
+
+    // We also want to save when the component unmounts (navigation)
+    return () => {
+      handleBeforeUnload();
+    };
+  }, [displayCount, isInfiniteScroll]);
 
   useEffect(() => {
     setLoading(true);
@@ -391,36 +434,48 @@ const ProductList = ({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex gap-4 mb-8 justify-end"
+          className="flex flex-col gap-4 mb-8"
         >
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Toutes les marques" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les marques</SelectItem>
-              {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={sortOption}
-            onValueChange={(value) => setSortOption(value as SortOption)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Trier par" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Par défaut</SelectItem>
-              <SelectItem value="price-asc">Prix croissant</SelectItem>
-              <SelectItem value="price-desc">Prix décroissant</SelectItem>
-              <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-4 justify-end">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Toutes les marques" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les marques</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortOption}
+              onValueChange={(value) => setSortOption(value as SortOption)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Trier par" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Par défaut</SelectItem>
+                <SelectItem value="price-asc">Prix croissant</SelectItem>
+                <SelectItem value="price-desc">Prix décroissant</SelectItem>
+                <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Pagination Mode Toggle for Compact View */}
+          <div className="flex items-center justify-end space-x-2">
+            <Switch
+              id="infinite-scroll-mode-compact"
+              checked={isInfiniteScroll}
+              onCheckedChange={setIsInfiniteScroll}
+            />
+            <Label htmlFor="infinite-scroll-mode-compact">Pagination infinie</Label>
+          </div>
         </motion.div>
       )}
 
