@@ -76,15 +76,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 to="/admin"
                 end
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                    isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                  `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${isActive ? "bg-muted text-primary" : "text-muted-foreground"
                   }`
                 }
               >
                 <Home className="h-4 w-4" />
                 Tableau de bord
               </NavLink>
-              
+
               {/* Gestion - Admin uniquement */}
               <RequireAdmin
                 fallback={null}
@@ -92,8 +91,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <NavLink
                   to="/admin/management"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${isActive ? "bg-muted text-primary" : "text-muted-foreground"
                     }`
                   }
                 >
@@ -109,8 +107,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <NavLink
                   to="/admin/users"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${isActive ? "bg-muted text-primary" : "text-muted-foreground"
                     }`
                   }
                 >
@@ -126,8 +123,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <NavLink
                   to="/admin/backup"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${isActive ? "bg-muted text-primary" : "text-muted-foreground"
                     }`
                   }
                 >
@@ -143,8 +139,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <NavLink
                   to="/admin/contact"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${isActive ? "bg-muted text-primary" : "text-muted-foreground"
                     }`
                   }
                 >
@@ -162,7 +157,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </NavLink>
             </nav>
           </div>
-          
+
           {/* Informations utilisateur */}
           <div className="border-t p-4 space-y-2">
             {user && (

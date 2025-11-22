@@ -2,7 +2,11 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "./ProductCard";
+import QuickViewModal from "./QuickViewModal";
 import { ProductSkeleton } from "./ProductSkeleton";
+import { ViewToggle } from "./ViewToggle";
+import { ProductListItem } from "./ProductListItem";
+import { SearchAutocomplete } from "./SearchAutocomplete";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +29,7 @@ import { PackageSearch } from "lucide-react";
 import { useProducts } from "@/context/ProductContextUnified";
 import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { useBrands } from "@/context/BrandContextUnified";
+import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Product, ProductFilters } from "@/types";
 
@@ -59,6 +64,7 @@ const ProductList = ({
   const allProducts = providedProducts ?? contextProducts;
   const { utilityCategories } = useUtilityCategories();
   const { brands } = useBrands();
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -66,6 +72,19 @@ const ProductList = ({
   const [sortOption, setSortOption] = useState<SortOption>("default");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProductForQuickView, setSelectedProductForQuickView] = useState<Product | null>(null);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  // View mode state with localStorage persistence
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const saved = localStorage.getItem('productViewMode');
+    return (saved === 'grid' || saved === 'list') ? saved : 'grid';
+  });
+
+  const handleViewChange = (newView: 'grid' | 'list') => {
+    setViewMode(newView);
+    localStorage.setItem('productViewMode', newView);
+  };
 
   // URL Search Params for pagination
   const [searchParams, setSearchParams] = useSearchParams();
@@ -207,6 +226,11 @@ const ProductList = ({
     setIsModalOpen(true);
   };
 
+  const handleQuickView = (product: Product) => {
+    setSelectedProductForQuickView(product);
+    setIsQuickViewOpen(true);
+  };
+
   // Fonction pour générer les numéros de page à afficher
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -282,55 +306,62 @@ const ProductList = ({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <Input
-            placeholder="Rechercher un produit..."
-            value={localSearchTerm}
-            onChange={(e) => setLocalSearchTerm(e.target.value)}
-            className="lg:col-span-1"
-          />
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Toutes les catégories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les catégories</SelectItem>
-              {utilityCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger>
-              <SelectValue placeholder="Toutes les marques" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les marques</SelectItem>
-              {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={sortOption}
-            onValueChange={(value) => setSortOption(value as SortOption)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Trier par" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Par défaut</SelectItem>
-              <SelectItem value="price-asc">Prix croissant</SelectItem>
-              <SelectItem value="price-desc">Prix décroissant</SelectItem>
-              <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+            <SearchAutocomplete
+              value={localSearchTerm}
+              onValueChange={setLocalSearchTerm}
+              products={allProducts}
+              className="lg:col-span-1"
+            />
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Toutes les catégories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
+                {utilityCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger>
+                <SelectValue placeholder="Toutes les marques" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les marques</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortOption}
+              onValueChange={(value) => setSortOption(value as SortOption)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Trier par" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Par défaut</SelectItem>
+                {isAdmin && <SelectItem value="price-asc">Prix croissant</SelectItem>}
+                {isAdmin && <SelectItem value="price-desc">Prix décroissant</SelectItem>}
+                <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex justify-end">
+            <ViewToggle view={viewMode} onViewChange={handleViewChange} />
+          </div>
         </motion.div>
       )}
 
@@ -340,36 +371,43 @@ const ProductList = ({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex gap-4 mb-8 justify-end"
+          className="mb-8"
         >
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Toutes les marques" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les marques</SelectItem>
-              {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={sortOption}
-            onValueChange={(value) => setSortOption(value as SortOption)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Trier par" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Par défaut</SelectItem>
-              <SelectItem value="price-asc">Prix croissant</SelectItem>
-              <SelectItem value="price-desc">Prix décroissant</SelectItem>
-              <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-4 justify-end mb-4">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Toutes les marques" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les marques</SelectItem>
+                {brands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortOption}
+              onValueChange={(value) => setSortOption(value as SortOption)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Trier par" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Par défaut</SelectItem>
+                {isAdmin && <SelectItem value="price-asc">Prix croissant</SelectItem>}
+                {isAdmin && <SelectItem value="price-desc">Prix décroissant</SelectItem>}
+                <SelectItem value="name-asc">Nom (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Nom (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex justify-end">
+            <ViewToggle view={viewMode} onViewChange={handleViewChange} />
+          </div>
         </motion.div>
       )}
 
@@ -395,23 +433,42 @@ const ProductList = ({
             </motion.div>
           ) : (
             <>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-4"
-              >
-                {paginatedProducts.map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onImageClick={handleImageClick}
-                    index={index}
-                    isNew={index < 2}
-                    isFeatured={index === 0}
-                  />
-                ))}
-              </motion.div>
+              {viewMode === 'grid' ? (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-4"
+                >
+                  {paginatedProducts.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onImageClick={handleImageClick}
+                      onQuickView={handleQuickView}
+                      index={index}
+                      isNew={index < 2}
+                      isFeatured={index === 0}
+                    />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex flex-col gap-3 mb-4"
+                >
+                  {paginatedProducts.map((product) => (
+                    <ProductListItem
+                      key={product.id}
+                      product={product}
+                      onQuickView={handleQuickView}
+                      onImageClick={handleImageClick}
+                    />
+                  ))}
+                </motion.div>
+              )}
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -475,6 +532,14 @@ const ProductList = ({
         </>
       )}
 
+      {/* Quick View Modal */}
+      <QuickViewModal
+        product={selectedProductForQuickView}
+        open={isQuickViewOpen}
+        onOpenChange={setIsQuickViewOpen}
+      />
+
+      {/* Image Zoom Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl p-0 bg-transparent border-0">
           <motion.img

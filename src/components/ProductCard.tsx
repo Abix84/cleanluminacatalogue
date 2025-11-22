@@ -9,21 +9,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { AspectRatio } from "./ui/aspect-ratio";
-import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/utils";
 import { useUtilityCategories } from "@/context/UtilityCategoryContextUnified";
 import { useBrands } from "@/context/BrandContextUnified";
 import {
   Eye,
-  ShoppingCart,
   Sparkles,
   CheckCircle,
   ExternalLink,
@@ -37,6 +29,7 @@ import { useAuth } from "@/context/AuthContext";
 interface ProductCardProps {
   product: Product;
   onImageClick: (imageUrl: string) => void;
+  onQuickView?: (product: Product) => void;
   isNew?: boolean;
   isFeatured?: boolean;
   index?: number;
@@ -45,6 +38,7 @@ interface ProductCardProps {
 const ProductCard = memo(({
   product,
   onImageClick,
+  onQuickView,
   isNew = false,
   isFeatured = false,
   index = 0,
@@ -54,7 +48,6 @@ const ProductCard = memo(({
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isAdmin } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const isProductFavorite = isFavorite(product.id);
 
@@ -78,8 +71,8 @@ const ProductCard = memo(({
   const handleQuickView = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsQuickViewOpen(true);
-  }, []);
+    onQuickView?.(product);
+  }, [onQuickView, product]);
 
   const handleFavoriteToggle = useCallback(
     (e: React.MouseEvent) => {
@@ -122,9 +115,9 @@ const ProductCard = memo(({
         onHoverEnd={() => setIsHovered(false)}
         className="h-full"
       >
-        <Link
-          to={`/product/${product.id}`}
-          className="flex flex-col h-full group"
+        <div
+          onClick={handleQuickView}
+          className="flex flex-col h-full group cursor-pointer"
         >
           <Card className="flex flex-col h-full overflow-hidden border-2 border-transparent hover:border-primary/20 transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)] bg-card/50 backdrop-blur-sm">
             {/* Image Container */}
@@ -281,104 +274,16 @@ const ProductCard = memo(({
             {/* Footer */}
             <CardFooter className="p-4 pt-0">
               <Button
-                asChild
                 className="w-full gap-2 group-hover:shadow-lg transition-shadow"
+                onClick={handleQuickView}
               >
-                <Link to={`/product/${product.id}`}>
-                  <ShoppingCart className="h-4 w-4" />
-                  Voir les détails
-                </Link>
+                <Eye className="h-4 w-4" />
+                Aperçu rapide
               </Button>
             </CardFooter>
           </Card>
-        </Link>
+        </div>
       </motion.div>
-
-      {/* Quick View Dialog */}
-      <Dialog open={isQuickViewOpen} onOpenChange={setIsQuickViewOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">{product.name}</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Image */}
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-contain"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <ImageIcon className="h-24 w-24 text-muted-foreground/30" />
-                </div>
-              )}
-              {category && (
-                <Badge
-                  className="absolute top-3 right-3 shadow-lg"
-                  style={{
-                    backgroundColor: category.color,
-                    color: "#fff",
-                  }}
-                >
-                  {category.name}
-                </Badge>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="space-y-4">
-              {brand && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Marque</p>
-                  <p className="font-semibold">{brand.name}</p>
-                </div>
-              )}
-
-              {product.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Description
-                  </p>
-                  <p className="text-sm leading-relaxed">
-                    {product.description}
-                  </p>
-                </div>
-              )}
-
-              <Separator />
-
-              {isAdmin && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Prix</p>
-                  <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-                    {formatPrice(product.price)}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button asChild className="flex-1">
-                  <Link to={`/product/${product.id}`}>
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Voir la fiche complète
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                  Produit disponible
-                </span>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 });

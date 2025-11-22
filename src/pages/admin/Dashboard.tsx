@@ -70,6 +70,7 @@ import { Product } from "@/types";
 import { exportToCSV, exportToJSON } from "@/lib/exportUtils";
 import { AdvancedStats } from "@/components/admin/AdvancedStats";
 import { DashboardCharts } from "@/components/admin/DashboardCharts";
+import { ImportExportButtons } from "@/components/admin/ImportExportButtons";
 
 const AdminDashboard = () => {
   const { products, deleteProduct } = useProducts();
@@ -128,41 +129,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Export des données
-  const handleExportJSON = () => {
-    try {
-      const data = {
-        products,
-        utilityCategories,
-        brands,
-      };
-      exportToJSON(data, "cleanexpress_backup");
-      toast.success("Export JSON réussi", {
-        description: `Données exportées : ${products.length} produits, ${utilityCategories.length} catégories, ${brands.length} marques`,
-        duration: 4000,
-      });
-    } catch (error) {
-      toast.error("Erreur lors de l'export JSON", {
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
-        duration: 5000,
-      });
-    }
-  };
 
-  const handleExportCSV = () => {
-    try {
-      exportToCSV(products, utilityCategories, brands, "cleanexpress_produits");
-      toast.success("Export CSV réussi", {
-        description: `${products.length} produits exportés au format CSV`,
-        duration: 4000,
-      });
-    } catch (error) {
-      toast.error("Erreur lors de l'export CSV", {
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
-        duration: 5000,
-      });
-    }
-  };
 
   // Ouvrir l'image en grand
   const handleImageClick = (imageUrl: string) => {
@@ -425,24 +392,7 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <RequireAdmin fallback={null}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Exporter
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportJSON} className="gap-2">
-                    <FileJson className="h-4 w-4" />
-                    Exporter en JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportCSV} className="gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Exporter en CSV
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ImportExportButtons />
               <Button variant="outline" size="sm" asChild className="gap-2">
                 <Link to="/admin/diagnostic">
                   <Stethoscope className="h-4 w-4" />
